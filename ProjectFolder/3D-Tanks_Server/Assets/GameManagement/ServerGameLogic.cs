@@ -13,6 +13,9 @@ public class ServerGameLogic : MonoBehaviour
     public bool testButton1;
     public string testMessage1;
 
+    public bool testButton2;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -26,6 +29,11 @@ public class ServerGameLogic : MonoBehaviour
         {
             testButton1 = false;
             theServer.CallRPC("TestRPCForClient", testMessage1);
+        }
+        if (testButton2)
+        {
+            testButton2 = false;
+            theServer.CallRPC("TestLoginRPC");
         }
     }
 

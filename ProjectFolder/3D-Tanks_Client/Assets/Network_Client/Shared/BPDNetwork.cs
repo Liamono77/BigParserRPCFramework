@@ -13,6 +13,7 @@ public class BPDNetwork : MonoBehaviour
     public NetPeerConfiguration netConfig; //Clients and servers will need to work with this variable when initializing
     public NetPeer netPeer; //Please note that Lidgren's naming of this type can be something of a misnomer. The BigParser tank demo utilizes authoritative client-server architecture
     public bool DebugMessages;//Turn this off to disable BPDNetwork debug messages
+    public List<GameObject> externalReferences = new List<GameObject>(); //This is a list of additional GameObjects to search if the script fails to find an RPC's destination on the gameObject its attached to.
 
     // Update is called once per frame
     protected virtual void Update()
@@ -37,19 +38,47 @@ public class BPDNetwork : MonoBehaviour
             {
                 string functionName = message.ReadString();
                 NetLogger.Log($"Recieved an RPC call for function {functionName} from sender of id {senderID}");
-                Component[] myScripts = gameObject.GetComponents<MonoBehaviour>();
-                foreach (MonoBehaviour script in myScripts)
+
+                bool localAttempt = AttemptInvocation(gameObject, functionName, message);
+                if (localAttempt == false)
                 {
-                    MethodInfo methodInfo = script.GetType().GetMethod(functionName);
-                    if (methodInfo != null)
+                    bool externalAttempt = false;
+                    foreach (GameObject reference in externalReferences)
                     {
-                        methodInfo.Invoke(script, ReadRPCParameters(message));
+                        if (AttemptInvocation(reference, functionName, message) == true)
+                        {
+                            externalAttempt = true;
+                            break;
+                        }
                     }
+                    if (externalAttempt == false)
+                    {
+                        //Log this as a normal error to guarantee it shows up. If you see this error, then something has probably gone horribly wrong
+                        Debug.LogError($"CRITICAL: Failed to find an invocation target for an RPC of name {functionName} from sender of ID {senderID}");
+                    }
+
                 }
             }
         }
     }
 
+    //This is an encapsulation of logic that was formerly contained in the ProcessMessages() method. It can be used to attempt an RPC-based invocation on a game object.
+    bool AttemptInvocation (GameObject gameObject, string functionName, NetIncomingMessage message)
+    {
+        bool hasFoundScript = false;
+        Component[] myScripts = gameObject.GetComponents<MonoBehaviour>();
+        foreach (MonoBehaviour script in myScripts)
+        {
+            MethodInfo methodInfo = script.GetType().GetMethod(functionName);
+            if (methodInfo != null)
+            {
+                methodInfo.Invoke(script, ReadRPCParameters(message));
+                hasFoundScript = true;
+            }
+        }
+
+        return hasFoundScript;
+    }
 
     //This function will attempt to convert the RPC data of an RPC call into an array of objects that can be used as parameters for invocation
     protected object[] ReadRPCParameters(NetIncomingMessage message)
@@ -165,28 +194,6 @@ public class BPDNetwork : MonoBehaviour
             }
         }
     }
-
-    //protected void Log(string message)
-    //{
-    //    if (DebugMessages)
-    //    {
-    //        Debug.Log($"NETWORK: {message}");
-    //    }
-    //}
-    //protected void LogWarning(string message)
-    //{
-    //    if (DebugMessages)
-    //    {
-    //        Debug.LogWarning($"NETWORK: {message}");
-    //    }
-    //}
-    //protected void LogError(string message)
-    //{
-    //    if (DebugMessages)
-    //    {
-    //        Debug.LogError($"NETWORK: {message}");
-    //    }
-    //}
 }
 
 //NETLOGGER
