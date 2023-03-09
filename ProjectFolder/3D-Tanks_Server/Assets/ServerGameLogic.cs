@@ -25,7 +25,7 @@ public class ServerGameLogic : MonoBehaviour
         if (testButton1)
         {
             testButton1 = false;
-            //theServer.CallRPC("TestRPCForClient", theServer.ser)
+            theServer.CallRPC("TestRPCForClient", testMessage1);
         }
     }
 

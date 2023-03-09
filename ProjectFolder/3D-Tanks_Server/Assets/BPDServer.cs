@@ -41,7 +41,7 @@ public class BPDServer : BPDNetwork
     //This overload of CallRPC will send an RPC to a single client, and will take a NetDeliveryMethod as a parameter
     //Remember the differences between UDP delivery methods. The two most important are:
     //Unreliable is best for 'blastable' data, such as transform data (position and rotation) or input data (bools and floats for player control inputs). This data will be sent out constantly, so it is OK if some packets don't arrive. The trade-off is dramatically higher speeds
-    //Reliable is best for data that will only be sent occasionally and with guaranteed arrival. DO NOT send these on every frame! UDP packets with this will cause the sending application to wait for the destination to return a confirmation. It will repeatedly send the data if it doensn't recieve confirmation to guarantee arrival, at the expense of speed.
+    //ReliableOrdered is best for data that will only be sent occasionally and with guaranteed arrival. DO NOT send these on every frame! UDP packets with this will cause the sending application to wait for the destination to return a confirmation. It will repeatedly send the data if it doensn't recieve confirmation to guarantee arrival, at the expense of speed.
     public void CallRPC(string functionName, NetConnection recipient, NetDeliveryMethod deliveryMethod, params object[] parameters)
     {
         NetOutgoingMessage message = netPeer.CreateMessage();
@@ -52,6 +52,21 @@ public class BPDServer : BPDNetwork
     }
     public void CallRPC(string functionName, NetConnection recipient, params object[] parameters)
     {
-        //CallR
+        CallRPC(functionName, recipient, NetDeliveryMethod.ReliableOrdered, parameters);
+    }
+
+
+    public void CallRPC(string functionName, NetDeliveryMethod deliveryMethod, params object[] parameters)
+    {
+        NetOutgoingMessage message = netPeer.CreateMessage();
+        message.Write(functionName);
+        WriteRPCParameters(message, parameters);
+        server.SendToAll(message, deliveryMethod);
+        Debug.Log($"Sent an RPC call to all clients for function {functionName}");
+    }
+
+    public void CallRPC(string functionName, params object[] parameters)
+    {
+        CallRPC(functionName, NetDeliveryMethod.ReliableOrdered, parameters);
     }
 }
