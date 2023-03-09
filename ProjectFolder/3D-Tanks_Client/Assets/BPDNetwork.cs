@@ -7,7 +7,7 @@ using System.Reflection;
 public class BPDNetwork : MonoBehaviour
 {
     public NetPeerConfiguration netConfig;
-    public NetPeer netPeer; //Please note that Lidgren's naming of this type can be something of a misnomer. The BigParser tank demo utilizes authoritative client-server architecture
+    public NetPeer netPeer;
 
     // Update is called once per frame
     protected virtual void Update()
