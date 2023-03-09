@@ -4,19 +4,27 @@ using UnityEngine;
 using Lidgren.Network;
 using System.Reflection;
 
+//BIG PARSER DEMO NETWORK
+//This is the base class for the Lidgren-based RPC framework of any multiplayer game we might need.
+//This class should remain identical between the client and server builds, and should primarily act as the framework for reading and writing RPC parameters. Avoid putting server, client, or game-specific logic here as much as possible.
+//WRITTEN BY LIAM SHELTON
 public class BPDNetwork : MonoBehaviour
 {
-    public NetPeerConfiguration netConfig;
-    public NetPeer netPeer;
+    public NetPeerConfiguration netConfig; //Clients and servers will need to work with this variable when initializing
+    public NetPeer netPeer; //Please note that Lidgren's naming of this type can be something of a misnomer. The BigParser tank demo utilizes authoritative client-server architecture
+    public bool DebugMessages;//Turn this off to disable BPDNetwork debug messages
 
     // Update is called once per frame
     protected virtual void Update()
     {
+        NetLogger.DebugMessages = DebugMessages;
         ProcessMessages();
     }
 
     //This function should be called every frame, and will check for new UDP messages.
     //If they happen to be of the Data type, then the function will attempt to process them as an RPC call
+    //This method will attempt to use inflection to invoke methods specified in RPC calls with included parameters.
+    //It will check every script that shares the same GameObject as the one this script is attached to. Consider this when structuring management systems!
     protected void ProcessMessages()
     {
         List<NetIncomingMessage> incomingMessages = new List<NetIncomingMessage>();
@@ -24,11 +32,11 @@ public class BPDNetwork : MonoBehaviour
         foreach (NetIncomingMessage message in incomingMessages)
         {
             long senderID = message.SenderConnection.RemoteUniqueIdentifier;
-            Debug.Log($"Received message of type {message.MessageType.ToString()} from sender of id {senderID}");
+            NetLogger.Log($"Received message of type {message.MessageType.ToString()} from sender of id {senderID}");
             if (message.MessageType == NetIncomingMessageType.Data)
             {
                 string functionName = message.ReadString();
-                Debug.Log($"Recieved an RPC call for function {functionName} from sender of id {senderID}");
+                NetLogger.Log($"Recieved an RPC call for function {functionName} from sender of id {senderID}");
                 Component[] myScripts = gameObject.GetComponents<MonoBehaviour>();
                 foreach (MonoBehaviour script in myScripts)
                 {
@@ -48,7 +56,7 @@ public class BPDNetwork : MonoBehaviour
     {
         List<object> parameters = new List<object>();
 
-        parameters.Add(message.SenderConnection); //The first parameter of every RPC call should be internally set to the sender connection. This will allow the server and clients to ignore RPC calls from unauthorized sources, and make it easy for server to identify the players associated with incoming RPC calls
+        parameters.Add(message.SenderConnection); //The first parameter of every RPC call should be internally set to the sender connection. This will allow the server and clients to ignore RPC calls from unauthorized sources, as well as make it easy to ignore unauthorized or invalid RPC calls
 
         string parametersDefinition = message.ReadString(); //The first string of every RPC will be a series of letters representing data types for parameters (eg IFB would mean the RPC contains an int, float, and a bool)
 
@@ -82,7 +90,7 @@ public class BPDNetwork : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"Unrecognized parameter of character definition {character}");
+                NetLogger.LogError($"Unrecognized parameter of character definition {character}");
             }
         }
         return parameters.ToArray();
@@ -117,7 +125,7 @@ public class BPDNetwork : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"Failed to write an RPC definition for object {obj}");
+                NetLogger.LogError($"Failed to write an RPC definition for object {obj}");
             }
         }
         message.Write(parametersDefinition);
@@ -153,8 +161,58 @@ public class BPDNetwork : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"Failed to write RPC contents for object {obj}");
+                NetLogger.LogError($"Failed to write RPC contents for object {obj}");
             }
+        }
+    }
+
+    //protected void Log(string message)
+    //{
+    //    if (DebugMessages)
+    //    {
+    //        Debug.Log($"NETWORK: {message}");
+    //    }
+    //}
+    //protected void LogWarning(string message)
+    //{
+    //    if (DebugMessages)
+    //    {
+    //        Debug.LogWarning($"NETWORK: {message}");
+    //    }
+    //}
+    //protected void LogError(string message)
+    //{
+    //    if (DebugMessages)
+    //    {
+    //        Debug.LogError($"NETWORK: {message}");
+    //    }
+    //}
+}
+
+//NETLOGGER
+//Use this to more easily enable or disable debug messages from the RPC framework 
+public static class NetLogger
+{
+    public static bool DebugMessages;
+    public static void Log(string message)
+    {
+        if (DebugMessages)
+        {
+            Debug.Log($"NETWORK: {message}");
+        }
+    }
+    public static void LogWarning(string message)
+    {
+        if (DebugMessages)
+        {
+            Debug.LogWarning($"NETWORK: {message}");
+        }
+    }
+    public static void LogError(string message)
+    {
+        if (DebugMessages)
+        {
+            Debug.LogError($"NETWORK: {message}");
         }
     }
 }
