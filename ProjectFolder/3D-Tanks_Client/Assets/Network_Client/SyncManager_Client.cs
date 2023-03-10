@@ -9,6 +9,8 @@ public class SyncManager_Client : MonoBehaviour
 
     public List<NetSync_Client> netSyncs = new List<NetSync_Client>();
 
+    public List<int> missingSyncIDs = new List<int>();
+
     private void Awake()
     {
         instance = this;
@@ -26,6 +28,18 @@ public class SyncManager_Client : MonoBehaviour
         else
         {
             //Debug.Log("load a net sync object");
+            if (!missingSyncIDs.Contains(ID)) //If our missing ID list doesn't contain the ID, then request the object
+            {
+                NetLogger.LogWarning($"Recieved a sync update for object of unknown ID {ID}. Requesting object information from server...");
+                BPDClient.instance.CallRPC("ObjectRequest", ID);
+                missingSyncIDs.Add(ID);
+            }
+            else
+            {
+                //comment out this netlogger line for now. redundant information until we start seeing inexplicable network bugs.
+                //NetLogger.LogWarning($"Recieved a sync update for object of unknown ID {ID}. Currently waiting for response from server...");
+
+            }
         }
     }
 
@@ -35,6 +49,18 @@ public class SyncManager_Client : MonoBehaviour
         NetSync_Client newNetSync = newObject.GetComponent<NetSync_Client>();
         newNetSync.ID = ID;
         netSyncs.Add(newNetSync);
+
+        if (missingSyncIDs.Contains(ID))
+        {
+            NetLogger.LogWarning($"Missing ID {ID} has been recieved from server.");
+            missingSyncIDs.Remove(ID);
+        }
+    }
+
+    public void FixMissingNetID(NetConnection server, int ID)
+    {
+        NetLogger.LogWarning($"Server has informed this client that missing ID {ID} no longer exists in its records. Removing from missing ID list...");
+        missingSyncIDs.Remove(ID);
     }
 
     public void NetDestroy(NetConnection server, int ID)
@@ -42,10 +68,35 @@ public class SyncManager_Client : MonoBehaviour
         NetSync_Client netSync = GetNetSyncByID(ID);
         if (netSync != null)
         {
+            NetLogger.Log($"Recieved destroy message for object of ID {ID}, name {netSync.gameObject.name}");
             netSyncs.Remove(netSync);
             Destroy(netSync.gameObject);
         }
     }
+
+    public void NetEnable(NetConnection server, int ID)
+    {
+        NetSync_Client netSync = GetNetSyncByID(ID);
+        if (netSync != null)
+        {
+            NetLogger.Log($"Recieved enable message for object of ID {ID}, name {netSync.gameObject.name}");
+            //netSyncs.Remove(netSync);
+            //Destroy(netSync.gameObject);
+            netSync.gameObject.SetActive(true);
+        }
+    }
+    public void NetDisable(NetConnection server, int ID)
+    {
+        NetSync_Client netSync = GetNetSyncByID(ID);
+        if (netSync != null)
+        {
+            NetLogger.Log($"Recieved disable message for object of ID {ID}, name {netSync.gameObject.name}");
+            //netSyncs.Remove(netSync);
+            //Destroy(netSync.gameObject);
+            netSync.gameObject.SetActive(false);
+        }
+    }
+
 
 
     //WARNING: this is a resource-intensive lookup that will happen every Sync Update. If profiler points to this script as a high consumer, then consider this a possible culprit

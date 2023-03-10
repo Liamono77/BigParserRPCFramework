@@ -17,6 +17,8 @@ public class BPDServer : BPDNetwork
 
     public static BPDServer instance;//Singleton Reference (mostly for net sync systems)
 
+    public static bool hasInitialized;
+    
 
     private void Awake()
     {
@@ -33,6 +35,7 @@ public class BPDServer : BPDNetwork
     //If an error message pops up in the Debug console complaining about socket exceptions, then chances are the socket is either currently being used by another application or was recently occupied by an application. You can almost always fix this by setting the port to something one more or one less than what it current is.
     public void InitializeServer()
     {
+        hasInitialized = true;
         netConfig = new NetPeerConfiguration("BPDNetwork") //Make sure this string matches whatever is specified by the server, as Lidgren uses this like a security check.
         {
             Port = port,

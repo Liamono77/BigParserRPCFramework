@@ -9,7 +9,7 @@ public class ShellExplosion : MonoBehaviour
     public float m_ExplosionForce = 1000f;              // The amount of force added to a tank at the centre of the explosion.
     public float m_MaxLifeTime = 2f;                    // The time in seconds before the shell is removed.
     public float m_ExplosionRadius = 5f;                // The maximum distance away from the explosion tanks can be and are still affected.
-
+    public GameObject explosionPrefab;
 
     private void Start ()
     {
@@ -62,8 +62,24 @@ public class ShellExplosion : MonoBehaviour
         // Once the particles have finished, destroy the gameobject they are on.
         Destroy (m_ExplosionParticles.gameObject, m_ExplosionParticles.duration);
 
+        //NEW: instantiate the explosion effect
+        GameObject explosioneffect = GameObject.Instantiate(explosionPrefab, transform);
+        explosioneffect.transform.parent = null;
+
+        //NEW: play the new audio
+        explosioneffect.GetComponent<AudioSource>().Play();
+
+        //NEW: play the new explosion
+        explosioneffect.GetComponent<ParticleSystem>().Play();
+
+        //NEW: destroy the instantiated particles same as we would the original
+        Destroy(explosioneffect, m_ExplosionParticles.duration);
+
+
         // Destroy the shell.
-        Destroy (gameObject);
+        Destroy(gameObject);
+
+
     }
 
 

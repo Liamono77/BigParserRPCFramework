@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Lidgren.Network;
 
 public class SyncManager_Server : MonoBehaviour
 {
@@ -29,7 +30,7 @@ public class SyncManager_Server : MonoBehaviour
 
     public void SendSyncUpdate(NetSync_Server netSync)
     {
-        BPDServer.instance.CallRPC("SyncUpdate", netSync.ID, new TransformInfo(netSync.transform));
+        BPDServer.instance.CallRPC("SyncUpdate", NetDeliveryMethod.Unreliable, netSync.ID, new TransformInfo(netSync.transform));
     }
 
     public void NetworkedStart(NetSync_Server newNetSync)
@@ -39,13 +40,25 @@ public class SyncManager_Server : MonoBehaviour
             lastID++;
             newNetSync.SetID(lastID);
             netSyncs.Add(newNetSync);
-            BPDServer.instance.CallRPC("NetInstantiation", newNetSync.prefabName, newNetSync.ID, new TransformInfo(newNetSync.transform));
-
+            if (BPDServer.hasInitialized) //If the BPDServer hasn't initialized itself yet, then don't bother with the netinstantiation RPC because no clients will be connected.
+            {
+                CallNetInstantiation(newNetSync);
+            }
         }
         else
         {
             NetLogger.LogError("attempted to add a NetSync that already exists");
         }
+    }
+
+    //keep these two overloads close to each other for ease of comparison. They're supposed to call the same RPC, except one should be for a specific client. My setup doens't seem to permit proper inheritance syntax. 
+    void CallNetInstantiation(NetSync_Server newNetSync)
+    {
+        BPDServer.instance.CallRPC("NetInstantiation", newNetSync.prefabName, newNetSync.ID, new TransformInfo(newNetSync.transform));
+    }
+    void CallNetInstantiation(NetSync_Server newNetSync, NetConnection sender)
+    {
+        BPDServer.instance.CallRPC("NetInstantiation", sender, newNetSync.prefabName, newNetSync.ID, new TransformInfo(newNetSync.transform));
     }
 
     public void NetworkedDestroy(NetSync_Server netSync)
@@ -59,6 +72,67 @@ public class SyncManager_Server : MonoBehaviour
         {
             NetLogger.LogError("attempted to destroy a NetSync that doesn't exist");
         }
+    }
+
+    public void NetworkedEnable(NetSync_Server netSync)
+    {
+        if (BPDServer.hasInitialized)
+        {
+            if (netSyncs.Contains(netSync))//make sure they're in the list
+            {
+                //netSyncs.Remove(netSync);
+                BPDServer.instance.CallRPC("NetEnable", netSync.ID);
+            }
+            else
+            {
+                NetLogger.LogError("attempted to enable a NetSync that doesn't exist");
+            }
+        }
+    }
+    public void NetworkedDisable(NetSync_Server netSync)
+    {
+        if (BPDServer.hasInitialized)
+        {
+            if (netSyncs.Contains(netSync))//make sure they're in the list
+            {
+                //netSyncs.Remove(netSync);
+                BPDServer.instance.CallRPC("NetDisable", netSync.ID);
+            }
+            else
+            {
+                NetLogger.LogError("attempted to disable a NetSync that doesn't exist");
+            }
+        }
+    }
+
+    //RPC from clients that are attempting to resolve missing IDs
+    public void ObjectRequest(NetConnection sender, int ID)
+    {
+        NetSync_Server netSync = GetNetSyncByID(ID);
+        if (netSync != null)
+        {
+            NetLogger.LogWarning($"Player of ID {sender.RemoteUniqueIdentifier} has requested a networked object of ID {ID} (object name: {netSync.gameObject.name}). Sending information..");
+            CallNetInstantiation(netSync, sender);
+        }
+        else
+        {
+            NetLogger.LogWarning($"Player of ID {sender.RemoteUniqueIdentifier} has requested a networked object of ID {ID}, which doesn't exist. Sending information..");
+            BPDServer.instance.CallRPC("FixMissingNetID", ID);
+        }
+    }
+
+    //this is a resource-intensive lookup, only called occasionally
+    NetSync_Server GetNetSyncByID(int ID)
+    {
+        foreach (NetSync_Server netSync in netSyncs)
+        {
+            if (netSync.ID == ID)
+            {
+                return netSync;
+            }
+        }
+        NetLogger.LogWarning($"Failed to get network object of ID {ID}");
+        return null;
     }
 
     //public void AddNetSync(NetSyncS newNetSync, int newID)

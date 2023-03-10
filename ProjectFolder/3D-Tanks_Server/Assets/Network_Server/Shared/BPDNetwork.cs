@@ -32,6 +32,10 @@ public class BPDNetwork : MonoBehaviour
         int numberOfMessages = netPeer.ReadMessages(incomingMessages);
         foreach (NetIncomingMessage message in incomingMessages)
         {
+            if (message.SenderConnection == null)
+            {
+                NetLogger.LogError("LOL");
+            }
             long senderID = message.SenderConnection.RemoteUniqueIdentifier;
             NetLogger.Log($"Received message of type {message.MessageType.ToString()} from sender of id {senderID}");
             if (message.MessageType == NetIncomingMessageType.Data)

@@ -32,11 +32,12 @@ public class ServerGameLogic : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        theServer.InitializeServer();
     }
     // Start is called before the first frame update
     void Start()
     {
-        theServer.InitializeServer();
+        //theServer.InitializeServer();
     }
 
     // Update is called once per frame
