@@ -7,7 +7,10 @@ using Lidgren.Network;
 public class PlayerConnection
 {
     public NetConnection connection;
+    public int playerID;
     public string userName;
+
+    public object inputData;
 }
 
 public class ServerGameLogic : MonoBehaviour
@@ -65,6 +68,49 @@ public class ServerGameLogic : MonoBehaviour
     {
         theServer.CallRPC("HandshakeResponse", sender, NetDeliveryMethod.ReliableOrdered, 0);
     }
+
+    public delegate void PlayerAdded(PlayerConnection player);
+    public PlayerAdded playerAddedCallback;
+    public static void AddPlayerConnection(NetConnection client, int ID, string username)
+    {
+        PlayerConnection newPlayer = new PlayerConnection();
+        newPlayer.connection = client;
+        newPlayer.playerID = ID;
+        newPlayer.userName = username;
+        instance.currentConnections.Add(newPlayer);
+        instance.playerAddedCallback(newPlayer);
+    }
+
+    //WARNING: possibly painful lookups
+    public static PlayerConnection GetPlayer(int ID)
+    {
+        NetLogger.Log($"GETPLAYER called for ID{ID}");
+        foreach (PlayerConnection player in instance.currentConnections)
+        {
+            if (player.playerID == ID)
+            {
+                return player;
+            }
+        }
+        return null;
+    }
+    public static PlayerConnection GetPlayer(NetConnection netConnection)
+    {
+        NetLogger.Log($"GETPLAYER called for connection ID {netConnection.RemoteUniqueIdentifier}");
+        foreach (PlayerConnection player in instance.currentConnections)
+        {
+            if (player.connection == netConnection)
+            {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    //public void lsls(params)
+    //{
+
+    //}
 
     public void TestRPCForServer(NetConnection connection, string someTestMessage)
     {
