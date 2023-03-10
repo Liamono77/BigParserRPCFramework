@@ -15,6 +15,13 @@ public class BPDServer : BPDNetwork
     //Note that no IP address specification is necessary for the BPDServer. This is because the server, acting as the host, only has one possible IP address that it can host on (specifically the public adress of the WIFI or Ethernet connection of the computer running the server application).
     public int port = 603;
 
+    public static BPDServer instance;//Singleton Reference (mostly for net sync systems)
+
+
+    private void Awake()
+    {
+        instance = this;
+    }
 
     //run base update function to listen for RPCs from clients. If additional update functionality is desired (possibly for BigParser-specific listeners), it can be set up here.
     protected override void Update()

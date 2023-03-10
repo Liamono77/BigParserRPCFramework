@@ -63,7 +63,7 @@ public class BPDNetwork : MonoBehaviour
     }
 
     //This is an encapsulation of logic that was formerly contained in the ProcessMessages() method. It can be used to attempt an RPC-based invocation on a game object.
-    bool AttemptInvocation (GameObject gameObject, string functionName, NetIncomingMessage message)
+    bool AttemptInvocation(GameObject gameObject, string functionName, NetIncomingMessage message)
     {
         bool hasFoundScript = false;
         Component[] myScripts = gameObject.GetComponents<MonoBehaviour>();
@@ -117,6 +117,13 @@ public class BPDNetwork : MonoBehaviour
                 var parameter = new Vector3(message.ReadFloat(), message.ReadFloat(), message.ReadFloat());
                 parameters.Add(parameter);
             }
+            else if (character == 'T')
+            {
+                Vector3 pos = new Vector3(message.ReadFloat(), message.ReadFloat(), message.ReadFloat());
+                Quaternion rot = Quaternion.Euler(message.ReadFloat(), message.ReadFloat(), message.ReadFloat());
+                TransformInfo newTransformInfo = new TransformInfo(pos, rot);
+                parameters.Add(newTransformInfo);
+            }
             else
             {
                 NetLogger.LogError($"Unrecognized parameter of character definition {character}");
@@ -151,6 +158,10 @@ public class BPDNetwork : MonoBehaviour
             else if (obj is Vector3)
             {
                 parametersDefinition = parametersDefinition + "V";
+            }
+            else if (obj is TransformInfo)
+            {
+                parametersDefinition = parametersDefinition + "T";
             }
             else
             {
@@ -188,6 +199,18 @@ public class BPDNetwork : MonoBehaviour
                 message.Write(aVector.y);
                 message.Write(aVector.z);
             }
+            else if (obj is TransformInfo)
+            {
+                TransformInfo theInfo = (TransformInfo)obj;
+                message.Write(theInfo.position.x);
+                message.Write(theInfo.position.y);
+                message.Write(theInfo.position.z);
+                Vector3 euler = theInfo.rotation.eulerAngles;
+                message.Write(euler.x);
+                message.Write(euler.y);
+                message.Write(euler.z);
+
+            }
             else
             {
                 NetLogger.LogError($"Failed to write RPC contents for object {obj}");
@@ -222,4 +245,24 @@ public static class NetLogger
             Debug.LogError($"NETWORK: {message}");
         }
     }
+}
+
+public class TransformInfo
+{
+    public TransformInfo()
+    {
+
+    }
+    public TransformInfo(Transform transform)
+    {
+        position = transform.position;
+        rotation = transform.rotation;
+    }
+    public TransformInfo(Vector3 pos, Quaternion rot)
+    {
+        position = pos;
+        rotation = rot;
+    }
+    public Vector3 position;
+    public Quaternion rotation;
 }
