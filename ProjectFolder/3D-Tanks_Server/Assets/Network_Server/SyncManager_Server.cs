@@ -39,6 +39,7 @@ public class SyncManager_Server : MonoBehaviour
             lastID++;
             newNetSync.SetID(lastID);
             netSyncs.Add(newNetSync);
+            BPDServer.instance.CallRPC("NetInstantiation", newNetSync.prefabName, newNetSync.ID, new TransformInfo(newNetSync.transform));
 
         }
         else
@@ -49,9 +50,10 @@ public class SyncManager_Server : MonoBehaviour
 
     public void NetworkedDestroy(NetSync_Server netSync)
     {
-        if (netSyncs.Contains(netSync))//make sure they're not already in the list
+        if (netSyncs.Contains(netSync))//make sure they're in the list
         {
             netSyncs.Remove(netSync);
+            BPDServer.instance.CallRPC("NetDestroy", netSync.ID);
         }
         else
         {

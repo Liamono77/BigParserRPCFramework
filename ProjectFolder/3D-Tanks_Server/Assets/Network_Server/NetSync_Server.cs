@@ -6,6 +6,7 @@ public class NetSync_Server : MonoBehaviour
 {
     public SyncManager_Server syncManager;
     public int ID;
+    public string prefabName; //CONSIDER REPLACING THIS WITH AUTOMATION
 
     // Start is called before the first frame update
     protected virtual void Start()

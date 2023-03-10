@@ -12,12 +12,18 @@ public class BPDClient : BPDNetwork
 {
     NetClient client; //Lidgren defaults to peer-to-peer functionality, so one must specify that an implementation is server or client when client-server architecture is desired.
 
+    public static BPDClient instance;
+
     //Set the address to the IP address of the server, and the port to whatever port the server is hosted on. If attempting to connect via LAN, the IP address can be set to 127.0.0.1 for ease of access.
     //If attempting to connect across multiple networks, then you will need to set the address to the PUBLIC  IP address of the server, provided the server is on an open port (use portforwarding to make this work). Use http://www.ipmonkey.com/ in the server's local area network to figure out what the clients need to enter 
 
     public string address = "127.0.0.1";
     public int port = 603;
 
+    private void Awake()
+    {
+        instance = this;
+    }
 
     //Run base update function to listen for RPC calls
     protected override void Update()
