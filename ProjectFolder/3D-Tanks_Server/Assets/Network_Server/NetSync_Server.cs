@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 //NET SYNC (SERVER)
-public class NetSyncS : MonoBehaviour
+public class NetSync_Server : MonoBehaviour
 {
-    public SyncManagerServer syncManager;
+    public SyncManager_Server syncManager;
     public int ID;
 
     // Start is called before the first frame update
     protected virtual void Start()
     {
-        syncManager = SyncManagerServer.instance;
+        syncManager = SyncManager_Server.instance;
         syncManager.NetworkedStart(this);
     }
 

@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SyncManagerServer : MonoBehaviour
+public class SyncManager_Server : MonoBehaviour
 {
-    public List<NetSyncS> netSyncs = new List<NetSyncS>();
+    public List<NetSync_Server> netSyncs = new List<NetSync_Server>();
 
-    public static SyncManagerServer instance; //Singleton reference, for independence
+    public static SyncManager_Server instance; //Singleton reference, for independence
 
     private int lastID = 0;
 
@@ -18,21 +18,21 @@ public class SyncManagerServer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
-    public void SendSyncUpdate(NetSyncS netSync)
+    public void SendSyncUpdate(NetSync_Server netSync)
     {
         BPDServer.instance.CallRPC("SyncUpdate", netSync.ID, new TransformInfo(netSync.transform));
     }
 
-    public void NetworkedStart(NetSyncS newNetSync)
+    public void NetworkedStart(NetSync_Server newNetSync)
     {
         if (!netSyncs.Contains(newNetSync))//make sure they're not already in the list
         {
@@ -47,7 +47,7 @@ public class SyncManagerServer : MonoBehaviour
         }
     }
 
-    public void NetworkedDestroy(NetSyncS netSync)
+    public void NetworkedDestroy(NetSync_Server netSync)
     {
         if (netSyncs.Contains(netSync))//make sure they're not already in the list
         {
