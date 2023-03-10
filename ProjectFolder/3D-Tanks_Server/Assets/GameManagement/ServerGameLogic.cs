@@ -3,11 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using Lidgren.Network;
 
+[System.Serializable]
+public class PlayerConnection
+{
+    public NetConnection connection;
+    public string userName;
+}
+
 public class ServerGameLogic : MonoBehaviour
 {
     public static ServerGameLogic instance; //Singleton Reference
 
     public BPDServer theServer;
+
+    public List<PlayerConnection> currentConnections = new List<PlayerConnection>();
+
+
+
+    //public float connectionCheckFrequency
+
 
     //some quickndirty variables to test the rpc calling with
     public bool testButton1;
@@ -38,6 +52,17 @@ public class ServerGameLogic : MonoBehaviour
             testButton2 = false;
             theServer.CallRPC("TestLoginRPC");
         }
+    }
+
+    public void ClientConnectionCheck(NetConnection sender)
+    {
+        theServer.CallRPC("SeverConnectionReply", sender);
+    }
+
+    //RPC from clients to help them identify if they've reached a server
+    public void Handshake(NetConnection sender)
+    {
+        theServer.CallRPC("HandshakeResponse", sender, NetDeliveryMethod.ReliableOrdered, 0);
     }
 
     public void TestRPCForServer(NetConnection connection, string someTestMessage)

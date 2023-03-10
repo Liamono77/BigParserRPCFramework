@@ -13,7 +13,7 @@ public class ServerLoginManager : MonoBehaviour
     [System.Serializable]
     public class PlayerDataTest
     {
-        public string Username;
+        public string userName;
         public string Password;
         public string someOtherThing;
     }
@@ -23,7 +23,7 @@ public class ServerLoginManager : MonoBehaviour
     {
         foreach (PlayerDataTest playerdata in testList)
         {
-            if (playerdata.Username == targetUsername)
+            if (playerdata.userName == targetUsername)
             {
                 return playerdata;
             }
@@ -79,5 +79,11 @@ public class ServerLoginManager : MonoBehaviour
             ServerGameLogic.instance.theServer.CallRPC("LoginResponse", sender, false, "That username doesn't exist. You hacking?");
 
         }
+    }
+
+
+    public void ClientSignUpRequest(NetConnection sender, string username, string password)
+    {
+        //TODO: put signup logic here. Should probably wait
     }
 }

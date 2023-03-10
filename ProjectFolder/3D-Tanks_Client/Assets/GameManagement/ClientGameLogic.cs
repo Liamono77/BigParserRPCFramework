@@ -10,11 +10,21 @@ public class ClientGameLogic : MonoBehaviour
 
     public BPDClient theClient;
 
-    public ClientGameState clientGameState = ClientGameState.login;
+    public ClientGameState clientGameState = ClientGameState.connecting;
 
     public GameObject loginScreen;
+    public GameObject connectScreen;
+
+    public float handshakeTimer;
+    public float handshakeFrequency = .5f;
+
+    public float handshakeWaitDuration = 5f;
+    public float handshakeWaitTimer;
 
 
+    public float connectionTimer;
+    public float connectionCheckFrequency = 5;
+    public float timeoutWindow = 10f;
 
     //some quickndirty variables to test the rpc calling with
     public bool testButton1;
@@ -28,7 +38,7 @@ public class ClientGameLogic : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        theClient.InitializeClient(theClient.address, theClient.port);
+        //theClient.InitializeClient(theClient.address, theClient.port);
     }
 
     // Update is called once per frame
@@ -40,8 +50,49 @@ public class ClientGameLogic : MonoBehaviour
             theClient.CallRPC("TestRPCForServer", Lidgren.Network.NetDeliveryMethod.ReliableOrdered, testMessage1);
         }
 
+        if (clientGameState == ClientGameState.waitingforHandshake)
+        {
+            waitForHandshake();
+        }
 
         loginScreen.SetActive(clientGameState == ClientGameState.login);
+        connectScreen.SetActive(clientGameState == ClientGameState.connecting);
+    }
+
+    public void MonitorConnectionStatus()
+    {
+
+    }
+
+    public void waitForHandshake()
+    {
+        if (Time.time > handshakeTimer)
+        {
+            handshakeTimer = Time.time + handshakeFrequency;
+            theClient.CallRPC("Handshake");
+        }
+
+        handshakeWaitTimer = handshakeWaitTimer - Time.deltaTime;
+        if (handshakeWaitTimer <= 0)
+        {
+            clientGameState = ClientGameState.connecting;
+        }
+    }
+
+    public void ConnectToServer(string address, int port)
+    {
+        theClient.InitializeClient(address, port);
+        //theClient.CallRPC("Handshake");
+        clientGameState = ClientGameState.waitingforHandshake;
+        handshakeWaitTimer = handshakeWaitDuration;
+    }
+    public void HandshakeResponse(NetConnection server, int responseCode)
+    {
+        //use the response code to distinguish between matchmaker connections and game server connections
+        if (responseCode == 0)
+        {
+            clientGameState = ClientGameState.login;
+        }
     }
 
     //Call this from other scripts to switch the game state to lobby
@@ -59,6 +110,7 @@ public class ClientGameLogic : MonoBehaviour
 public enum ClientGameState
 {
     connecting,
+    waitingforHandshake,
     login,
     lobby,
 }

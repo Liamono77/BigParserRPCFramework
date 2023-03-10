@@ -11,6 +11,7 @@ public class LoginManager : MonoBehaviour
     {
         usernameEntry,
         passwordEntry,
+        signup,
     }
     public GameObject usernameScreen;
     public InputField usernameText;
@@ -20,6 +21,12 @@ public class LoginManager : MonoBehaviour
     public InputField passwordText;
     public GameObject passwordFailMessage;
     public Text logInAsUsernameMessage;
+
+    public GameObject signUpScreen;
+    public InputField newUsernameField;
+    public InputField newPasswordField;
+    public InputField secondPasswordField;
+    public Text signupFailMessage;
 
     public GameObject waitingForResponseIndicator;
     public bool waitingForServerResponse;
@@ -35,6 +42,7 @@ public class LoginManager : MonoBehaviour
     {
         usernameScreen.SetActive(logInState == LogInState.usernameEntry);
         passwordScreen.SetActive(logInState == LogInState.passwordEntry);
+        signUpScreen.SetActive(logInState == LogInState.signup);
         waitingForResponseIndicator.SetActive(waitingForServerResponse);
 
         logInAsUsernameMessage.text = $"attempting to log in as user {usernameText.text}";
@@ -94,6 +102,51 @@ public class LoginManager : MonoBehaviour
         passwordFailMessage.SetActive(false);
         usernameFailMessage.SetActive(false);
         waitingForServerResponse = false;
+    }
+
+    //call this through the SignUp switch button
+    public void SwitchToSignUpMode()
+    {
+        logInState = LogInState.signup;
+        passwordFailMessage.SetActive(false);
+        usernameFailMessage.SetActive(false);
+        waitingForServerResponse = false;
+    }
+
+    //call this through a Register button of some sort
+    public void SendSignUpRequest()
+    {
+        if (newPasswordField.text == secondPasswordField.text)
+        {
+            //if passwords both match, then proceed to send the signup
+            waitingForServerResponse = true;
+            signupFailMessage.gameObject.SetActive(false);
+            ClientGameLogic.instance.theClient.CallRPC("ClientSignUpRequest", newUsernameField.text, newPasswordField.text);
+        }
+        else
+        {
+            signupFailMessage.gameObject.SetActive(true);
+            signupFailMessage.text = "passwords do not match";
+        }
+
+
+    }
+    //RPC from server confirming or denying sign up request. TODO: set up local storage of username and password
+    public void SignUpResponse(NetConnection server, bool approved, string failMessage)
+    {
+        waitingForServerResponse = false;
+
+        if (approved)
+        {
+            usernameText.text = newUsernameField.text;
+            signupFailMessage.gameObject.SetActive(false);
+
+        }
+        else
+        {
+            signupFailMessage.gameObject.SetActive(true);
+            signupFailMessage.text = failMessage;
+        }
     }
 
     public void TestLoginRPC(NetConnection server)
