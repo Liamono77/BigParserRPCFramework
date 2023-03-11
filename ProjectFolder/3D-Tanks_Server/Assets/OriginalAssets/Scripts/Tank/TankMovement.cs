@@ -16,7 +16,8 @@ public class TankMovement : MonoBehaviour
     private Rigidbody m_Rigidbody;         
     private float m_MovementInputValue;    
     private float m_TurnInputValue;        
-    private float m_OriginalPitch;         
+    private float m_OriginalPitch;
+    public TankInputData tankInputData;
 
 
     private void Awake()
@@ -53,7 +54,11 @@ public class TankMovement : MonoBehaviour
         // Store the player's input and make sure the audio for the engine is playing.
         m_MovementInputValue = Input.GetAxis(m_MovementAxisName);
         m_TurnInputValue = Input.GetAxis(m_TurnAxisName);
- 		EngineAudio();
+
+        m_MovementInputValue = tankInputData.moveDirection.y;
+        m_TurnInputValue = tankInputData.moveDirection.x;
+
+        EngineAudio();
     }
 
 

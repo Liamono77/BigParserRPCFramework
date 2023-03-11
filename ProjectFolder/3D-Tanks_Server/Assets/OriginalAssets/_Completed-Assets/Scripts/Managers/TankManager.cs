@@ -23,6 +23,9 @@ namespace Complete
         private TankShooting m_Shooting;                        // Reference to tank's shooting script, used to disable and enable control.
         private GameObject m_CanvasGameObject;                  // Used to disable the world space UI during the Starting and Ending phases of each round.
 
+        public Vector3 spawnPosition;
+
+        public PlayerConnection myConnection;
 
         public void Setup ()
         {
@@ -34,6 +37,10 @@ namespace Complete
             // Set the player numbers to be consistent across the scripts.
             m_Movement.m_PlayerNumber = m_PlayerNumber;
             m_Shooting.m_PlayerNumber = m_PlayerNumber;
+
+            //NEW: Set the player input data
+            m_Movement.tankInputData = myConnection.inputData as TankInputData;
+            m_Shooting.tankInputData = myConnection.inputData as TankInputData;
 
             // Create a string using the correct color that says 'PLAYER 1' etc based on the tank's color and the player's number.
             m_ColoredPlayerText = "<color=#" + ColorUtility.ToHtmlStringRGB(m_PlayerColor) + ">PLAYER " + m_PlayerNumber + "</color>";
@@ -73,8 +80,11 @@ namespace Complete
         // Used at the start of each round to put the tank into it's default state.
         public void Reset ()
         {
-            m_Instance.transform.position = m_SpawnPoint.position;
-            m_Instance.transform.rotation = m_SpawnPoint.rotation;
+           // m_Instance.transform.position = m_SpawnPoint.position;
+           // m_Instance.transform.rotation = m_SpawnPoint.rotation;
+
+            m_Instance.transform.position = spawnPosition;
+            m_Instance.transform.rotation = Quaternion.identity;
 
             m_Instance.SetActive (false);
             m_Instance.SetActive (true);

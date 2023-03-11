@@ -20,6 +20,8 @@ namespace Complete
         private float m_OriginalPitch;              // The pitch of the audio source at the start of the scene.
         private ParticleSystem[] m_particleSystems; // References to all the particles systems used by the Tanks
 
+        public TankInputData tankInputData;
+
         private void Awake ()
         {
             m_Rigidbody = GetComponent<Rigidbody> ();
@@ -75,6 +77,9 @@ namespace Complete
             // Store the value of both input axes.
             m_MovementInputValue = Input.GetAxis (m_MovementAxisName);
             m_TurnInputValue = Input.GetAxis (m_TurnAxisName);
+
+            m_MovementInputValue = tankInputData.moveDirection.y;
+            m_TurnInputValue = tankInputData.moveDirection.x;
 
             EngineAudio ();
         }
