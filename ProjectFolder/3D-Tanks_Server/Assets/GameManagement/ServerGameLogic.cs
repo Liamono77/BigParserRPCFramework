@@ -10,7 +10,10 @@ public class PlayerConnection
     public int playerID;
     public string userName;
 
-    public object inputData;
+    public object bigparserData; //Use this for persistent player data that should be pulled from BigParser for a specific game (equipment and cosmetic unlocks, currencies, lifetime performance statistics, etc)
+    public object inputData; //Use this for player input data structures that all servers for a specific game are designed to listen for.
+    public object serverData; //Use this for non-persistent game server-specific data that will be utilized by all servers of a particular game in each session (universal leaderboard data (kills & deaths, objective score), current loadout, current team, possibly playable entity types) 
+    public object specialData; //Use this for non-persistent gamemode-specific data structures (eg goomba stomps, owned AI-controlled units, remaining lives,  current powerups, scrap/gold/fuel,  etc.)
 }
 
 public class ServerGameLogic : MonoBehaviour
@@ -70,15 +73,25 @@ public class ServerGameLogic : MonoBehaviour
     }
 
     public delegate void PlayerAdded(PlayerConnection player);
-    public PlayerAdded playerAddedCallback;
-    public static void AddPlayerConnection(NetConnection client, int ID, string username)
+    public PlayerAdded playerAddedCallback; //use this callback in other scripts for functionality based upon new players joining
+    public static void AddPlayerConnection(NetConnection client, string reason, int ID, string username)
     {
+        NetLogger.Log($"CONNECTION: JOIN: Player of username '{username}' (client ID: '{client.RemoteUniqueIdentifier}') has been approved for full player connection. Reason: {reason}");
         PlayerConnection newPlayer = new PlayerConnection();
         newPlayer.connection = client;
         newPlayer.playerID = ID;
         newPlayer.userName = username;
         instance.currentConnections.Add(newPlayer);
         instance.playerAddedCallback(newPlayer);
+    }
+
+    public delegate void PlayerDisconnected(PlayerConnection player);
+    public PlayerDisconnected playerDisconnectedCallback; //use this callback in other scripts for functionality based upon players leaving or disconnecting
+    public static void RemovePlayerConnection(PlayerConnection player, string reason)
+    {
+        NetLogger.Log($"CONNECTION: LEAVE: Player of username '{player.userName}' (client ID: '{player.connection.RemoteUniqueIdentifier}') has been disconnected. Reason: {reason}");
+        instance.currentConnections.Remove(player);
+        instance.playerDisconnectedCallback(player);
     }
 
     //WARNING: possibly painful lookups
