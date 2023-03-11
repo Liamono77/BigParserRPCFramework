@@ -57,6 +57,21 @@ namespace Complete
 
         private void SpawnAllTanks()
         {
+            // For all the tanks...
+            for (int i = 0; i < m_Tanks.Count; i++)
+            {
+                // ... create them, set their player number and references needed for control.
+                //m_Tanks[i].m_Instance =
+                //    Instantiate(m_TankPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+
+                //m_Tanks[i].spawnPosition = randomPosition(spawnRadius);
+                Destroy(m_Tanks[i].m_Instance);
+
+                //m_Tanks[i].m_PlayerNumber = i + 1;
+                //m_Tanks[i].Setup();
+            }
+            m_Tanks.Clear();
+
             foreach (PlayerConnection player in m_server.currentConnections)
             {
                 MakeTankManager(player);
@@ -112,6 +127,9 @@ namespace Complete
         {
            // if ()
 
+            //NEW: start off (for real) by running the lobby coroutine
+            //yield return S
+
             // Start off by running the 'RoundStarting' coroutine but don't return until it's finished.
             yield return StartCoroutine (RoundStarting ());
 
@@ -135,10 +153,18 @@ namespace Complete
             }
         }
 
+        private IEnumerator WaitForPlayers()
+        {
+            while (m_server.currentConnections.Count <1)//(m_server.currentConnections.Count < 1)
+            {
+                yield return null;
+            }
 
+
+        }
         private IEnumerator RoundStarting ()
         {
-            while(testButton==false)//(m_server.currentConnections.Count < 1)
+            while(m_server.currentConnections.Count < 1)//(m_server.currentConnections.Count < 1)
             {
                 yield return null;
             }

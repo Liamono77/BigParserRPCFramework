@@ -27,7 +27,7 @@ public class InputListenerTanksGame : MonoBehaviour
         if (player != null)
         {
             (player.inputData as TankInputData).moveDirection.x = moveX;
-            (player.inputData as TankInputData).moveDirection.x = moveX;
+            (player.inputData as TankInputData).moveDirection.y = moveY;
             (player.inputData as TankInputData).targetPosition = targetPosition;
             (player.inputData as TankInputData).fire = fire;
         }
