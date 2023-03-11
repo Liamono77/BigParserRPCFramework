@@ -20,7 +20,7 @@ public class TankServerPlayerData
     {
         Spawning, //Approve player respawn requests during this state
         Playing, //Allow player control of a tank during this state
-        Dying, //Perform death-specific processes during this state
+        //Dying, //Perform death-specific processes during this state
     }
 
     public float deathTimer;
@@ -119,7 +119,7 @@ public class TankServerUniversal : MonoBehaviour
     {
         TankServerPlayerData playerData = (player.serverData as TankServerPlayerData);
         tankServerDatas.Remove(playerData);
-        //SendServerInfo(player);
+        //CALL AN RPC TO TELL THEM THEY'VE DISCONNECTED
     }
 
     public void SendServerInfo(PlayerConnection player)
