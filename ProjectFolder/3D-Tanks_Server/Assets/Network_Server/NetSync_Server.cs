@@ -9,6 +9,7 @@ public class NetSync_Server : MonoBehaviour
     public string prefabName; //CONSIDER REPLACING THIS WITH AUTOMATION
 
     private List<object> syncParameters = new List<object>();
+    private List<object> syncUpdateParameters = new List<object>();
 
     public bool usePrototype;
 
@@ -20,7 +21,7 @@ public class NetSync_Server : MonoBehaviour
 
         if (usePrototype == false)
         {
-            syncManager.NetworkedStart(this);
+            syncManager.NetworkedStart(this, syncParameters.ToArray());
 
         }
         else
@@ -44,6 +45,25 @@ public class NetSync_Server : MonoBehaviour
             syncParameters.Add(p);
         }
     }
+
+
+
+    protected virtual void PreSyncUpdate()
+    {
+
+    }
+    protected void AddSyncUpdateParameters(params object[] parameters)
+    {
+        syncUpdateParameters.Clear();
+        foreach (object p in parameters)
+        {
+            syncUpdateParameters.Add(p);
+        }
+    }
+
+
+
+
 
     protected SyncManager_Server safeSyncManager()
     {
@@ -83,9 +103,20 @@ public class NetSync_Server : MonoBehaviour
         RequestSyncUpdate();
     }
 
+    
+
     protected virtual void RequestSyncUpdate()
     {
-        syncManager.SendSyncUpdate(this);
+        if (usePrototype == false)
+        {
+            syncManager.SendSyncUpdate(this);
+
+        }
+        else
+        {
+            PreSyncUpdate();
+            syncManager.SendSyncUpdatePrototype(this, syncUpdateParameters.ToArray());
+        }
     }
 
     protected virtual void OnDestroy()

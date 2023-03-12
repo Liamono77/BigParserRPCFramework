@@ -45,13 +45,39 @@ public class SyncManager_Client : MonoBehaviour
         }
     }
 
-    public void NetInstantiation(NetConnection server, string prefabName, int ID, TransformInfo transformInfo)
+    public void SyncUpdatePrototype(NetConnection server, int ID, params object[] parameters)
+    {
+        NetSync_Client netSyncToSync = GetNetSyncByID(ID);
+        if (netSyncToSync != null)
+        {
+            netSyncToSync.NetUpdate(parameters);
+        }
+        else
+        {
+            //Debug.Log("load a net sync object");
+            if (!missingSyncIDs.Contains(ID)) //If our missing ID list doesn't contain the ID, then request the object
+            {
+                NetLogger.LogWarning($"Recieved a sync update for object of unknown ID {ID}. Requesting object information from server...");
+                BPDClient.instance.CallRPC("ObjectRequest", ID);
+                missingSyncIDs.Add(ID);
+            }
+            else
+            {
+                //comment out this netlogger line for now. redundant information until we start seeing inexplicable network bugs.
+                //NetLogger.LogWarning($"Recieved a sync update for object of unknown ID {ID}. Currently waiting for response from server...");
+
+            }
+        }
+    }
+
+
+    public void NetInstantiation(NetConnection server, string prefabName, int ID, TransformInfo transformInfo, params object[] parameters)
     {
         GameObject newObject = GameObject.Instantiate(Resources.Load<GameObject>(prefabName), transformInfo.position, transformInfo.rotation);
         NetSync_Client newNetSync = newObject.GetComponent<NetSync_Client>();
         newNetSync.ID = ID;
         netSyncs.Add(newNetSync);
-
+        newNetSync.NetInstantiation(parameters);
         if (missingSyncIDs.Contains(ID))
         {
             NetLogger.LogWarning($"Missing ID {ID} has been recieved from server.");
@@ -61,12 +87,11 @@ public class SyncManager_Client : MonoBehaviour
 
     public void NetInstantiationPrototype(NetConnection server, string prefabName, int ID, TransformInfo transformInfo, params object[] parameters)
     {
-        Debug.LogWarning("instantiation overload 1");
         GameObject newObject = GameObject.Instantiate(Resources.Load<GameObject>(prefabName), transformInfo.position, transformInfo.rotation);
         NetSync_Client newNetSync = newObject.GetComponent<NetSync_Client>();
         newNetSync.ID = ID;
         netSyncs.Add(newNetSync);
-        newNetSync.InstantiationFunctionPrototype(parameters);
+        newNetSync.NetInstantiation(parameters);
 
         if (missingSyncIDs.Contains(ID))
         {

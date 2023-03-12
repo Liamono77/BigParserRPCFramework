@@ -25,7 +25,7 @@ public class NetSync_Client : MonoBehaviour
 
 
     //Called from external script
-    public void InstantiationFunctionPrototype(params object[] parameters)
+    public void NetInstantiation(params object[] parameters)
     {
         List<object> parametersToProcess = parameters.ToList<object>();
         ProcessInstantiationParameters(ref parametersToProcess);
@@ -33,6 +33,17 @@ public class NetSync_Client : MonoBehaviour
 
     //Inheriting scripts should override this with their own logic on a per-variable basis
     protected virtual void ProcessInstantiationParameters(ref List<object> list)
+    {
+
+    }
+
+    public void NetUpdate(params object[] parameters)
+    {
+        List<object> parametersToProcess = parameters.ToList<object>();
+        ProcessNetUpdateParameters(ref parametersToProcess);
+    }
+
+    protected virtual void ProcessNetUpdateParameters(ref List<object> list)
     {
 
     }

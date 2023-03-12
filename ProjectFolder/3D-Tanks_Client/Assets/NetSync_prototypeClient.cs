@@ -13,4 +13,11 @@ public class NetSync_prototypeClient : NetSync_Client
         Deque(ref health, list);
         Deque(ref someString, list);
     }
+
+    protected override void ProcessNetUpdateParameters(ref List<object> list)
+    {
+        base.ProcessNetUpdateParameters(ref list);
+        Deque(ref health, list);
+        Deque(ref someString, list);
+    }
 }
