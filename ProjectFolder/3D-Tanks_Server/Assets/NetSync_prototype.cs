@@ -7,10 +7,9 @@ public class NetSync_prototype : NetSync_Server
     public float health = 10;
     public string someString = "PROTOTYPELOLOLOL";
 
-    protected override void Awake()
+    protected override void PreAwake()
     {
-        //base.Awake();
-        syncManager = safeSyncManager();
-        syncManager.NetworkedStartPrototype(this, health, someString);
+        base.PreAwake();
+        AddInstantiationParameters(health, someString);
     }
 }

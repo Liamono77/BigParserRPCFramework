@@ -1,10 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class NetSync_Client : MonoBehaviour
 {
     public int ID;
+    protected virtual void Awake()
+    {
+        
+    }
 
     // Start is called before the first frame update
     protected virtual void Start()
@@ -18,8 +23,29 @@ public class NetSync_Client : MonoBehaviour
         
     }
 
-    public virtual void InstantiationFunctionPrototype(params object[] parameters)
+
+    //Called from external script
+    public void InstantiationFunctionPrototype(params object[] parameters)
+    {
+        List<object> parametersToProcess = parameters.ToList<object>();
+        ProcessInstantiationParameters(ref parametersToProcess);
+    }
+
+    //Inheriting scripts should override this with their own logic on a per-variable basis
+    protected virtual void ProcessInstantiationParameters(ref List<object> list)
     {
 
     }
+
+    protected void Deque<T>(ref T variable, List<object> parameters)
+    {
+        if (variable.GetType() == parameters[0].GetType())
+        {
+            variable = (T)parameters[0];
+            parameters.RemoveAt(0);
+        }
+    }
 }
+
+
+

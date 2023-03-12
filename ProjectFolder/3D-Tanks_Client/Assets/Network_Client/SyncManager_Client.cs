@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Lidgren.Network;
 
+using System.Reflection;
+
 public class SyncManager_Client : MonoBehaviour
 {
     public static SyncManager_Client instance;

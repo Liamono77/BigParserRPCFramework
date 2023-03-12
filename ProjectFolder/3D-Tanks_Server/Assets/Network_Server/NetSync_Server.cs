@@ -8,13 +8,41 @@ public class NetSync_Server : MonoBehaviour
     public int ID;
     public string prefabName; //CONSIDER REPLACING THIS WITH AUTOMATION
 
+    private List<object> syncParameters = new List<object>();
+
+    public bool usePrototype;
+
     // Start is called before the first frame update
     protected virtual void Awake()
     {
-        //syncManager = SyncManager_Server.instance;
         syncManager = safeSyncManager();
-        //Debug.Log($"awake {this.gameObject.name}, manager {syncManager.gameObject.name}");
-        syncManager.NetworkedStart(this);
+        PreAwake();
+
+        if (usePrototype == false)
+        {
+            syncManager.NetworkedStart(this);
+
+        }
+        else
+        {
+            syncManager.NetworkedStartPrototype(this, syncParameters.ToArray());
+        }
+
+    }
+
+    //scripts should override this when calling AddParameters to add whatever parameters will 
+    protected virtual void PreAwake()
+    {
+
+    }
+
+    //Inheriting scripts should call this to specify parameters that should be sent as part of a networked instantiation
+    protected void AddInstantiationParameters(params object[] parameters)
+    {
+        foreach (object p in parameters)
+        {
+            syncParameters.Add(p);
+        }
     }
 
     protected SyncManager_Server safeSyncManager()
@@ -46,7 +74,6 @@ public class NetSync_Server : MonoBehaviour
 
     protected virtual void Start()
     {
-        //syncManager.NetworkedStart(this);
 
     }
 
@@ -68,19 +95,11 @@ public class NetSync_Server : MonoBehaviour
     }
     protected virtual void OnEnable()
     {
-        //if (BPDServer.hasInitialized)
-        //{
-        //    syncManager.NetworkedEnable(this);
-        //}
 
         syncManager.NetworkedEnable(this);
     }
     protected virtual void OnDisable()
     {
-        //if(BPDServer.hasInitialized)
-        //{
-        //    syncManager.NetworkedDisable(this);
-        //}
 
         syncManager.NetworkedDisable(this);
 
@@ -91,11 +110,4 @@ public class NetSync_Server : MonoBehaviour
         ID = newID;
     }
 
-    //public IEnumerable emergencyDelayThingy()
-    //{
-    //    yield return new WaitForSeconds(1);
-
-    //    NetLogger.LogWarning("emergencyDelay");
-    //    //yield return null;
-    //}
 }

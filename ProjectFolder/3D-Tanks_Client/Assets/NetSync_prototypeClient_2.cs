@@ -2,29 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NetSync_prototypeClient_2 : NetSync_Client
+public class NetSync_prototypeClient_2 : NetSync_prototypeClient
 {
     public bool someBoolean;
     public int someInt;
     public string aString1;
     public string aString2;
-    //public override void InstantiationFunctionPrototype(params object[] parameters)
-    //{
-    //    base.InstantiationFunctionPrototype(parameters);
-    //    health = (float)parameters[0];
-    //    someString = (string)parameters[1];
 
-    //    //GameObject.Instantiate(Resources.Load<GameObject>(someString), transform.position, transform.rotation);
-    //}
-    public override void InstantiationFunctionPrototype(params object[] parameters)
+    protected override void ProcessInstantiationParameters(ref List<object> list)
     {
-        base.InstantiationFunctionPrototype(parameters);
-        someBoolean = (bool)parameters[0];
-        someInt = (int)parameters[1];
-        aString1 = (string)parameters[2];
-        aString2 = (string)parameters[3];
+        base.ProcessInstantiationParameters(ref list);
+        Deque(ref someBoolean, list);
+        Deque(ref someInt, list);
+        Deque(ref aString1, list);
+        Deque(ref aString2, list);
 
 
-        //GameObject.Instantiate(Resources.Load<GameObject>(someString), transform.position, transform.rotation);
     }
 }
