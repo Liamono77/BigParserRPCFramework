@@ -9,9 +9,9 @@ public class NetSync_prototypeClient_2 : NetSync_prototypeClient
     public string aString1;
     public string aString2;
 
-    protected override void ProcessInstantiationParameters(ref List<object> list)
+    protected override void NetAwake(ref List<object> list)
     {
-        base.ProcessInstantiationParameters(ref list);
+        base.NetAwake(ref list);
         Deque(ref someBoolean, list);
         Deque(ref someInt, list);
         Deque(ref aString1, list);

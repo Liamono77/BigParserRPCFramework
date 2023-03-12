@@ -12,6 +12,6 @@ public class NetSync_prototype_2 : NetSync_prototype
     protected override void NetAwake()
     {
         base.NetAwake();
-        AddInstantiationParameters(lolBool, lolInt, lol1, lol2);
+        AddNetAwakeParameters(lolBool, lolInt, lol1, lol2);
     }
 }

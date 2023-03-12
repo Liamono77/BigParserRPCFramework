@@ -25,29 +25,34 @@ public class NetSync_Client : MonoBehaviour
 
 
     //Called from external script
-    public void NetInstantiation(params object[] parameters)
+    public void ManagedAwake(params object[] parameters)
     {
         List<object> parametersToProcess = parameters.ToList<object>();
-        ProcessInstantiationParameters(ref parametersToProcess);
+        NetAwake(ref parametersToProcess);
     }
 
     //Inheriting scripts should override this with their own logic on a per-variable basis
-    protected virtual void ProcessInstantiationParameters(ref List<object> list)
+    protected virtual void NetAwake(ref List<object> list)
     {
 
     }
 
-    public void NetUpdate(params object[] parameters)
+
+    //Called from external script
+    public void ManagedUpdate(params object[] parameters)
     {
         List<object> parametersToProcess = parameters.ToList<object>();
-        ProcessNetUpdateParameters(ref parametersToProcess);
+        NetUpdate(ref parametersToProcess);
     }
 
-    protected virtual void ProcessNetUpdateParameters(ref List<object> list)
+    //Inheriting scripts should override this with their own logic on a per-variable basis
+    protected virtual void NetUpdate(ref List<object> list)
     {
 
     }
 
+
+    //Use this when setting variables to ensure that inheriting classes don't need to pay attention to their parent's variable count
     protected void Deque<T>(ref T variable, List<object> parameters)
     {
         if (variable.GetType() == parameters[0].GetType())

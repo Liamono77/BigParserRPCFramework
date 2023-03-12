@@ -11,6 +11,6 @@ public class NetSyncStandard : NetSync_Server
     protected override void NetUpdate()
     {
         base.NetUpdate();
-        AddSyncUpdateParameters(new TransformInfo(transform));
+        AddNetUpdateParameters(new TransformInfo(transform));
     }
 }

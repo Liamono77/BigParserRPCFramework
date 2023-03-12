@@ -10,12 +10,12 @@ public class NetSync_prototype : NetSync_Server
     protected override void NetAwake()
     {
         base.NetAwake();
-        AddInstantiationParameters(health, someString);
+        AddNetAwakeParameters(health, someString);
     }
 
     protected override void NetUpdate()
     {
         base.NetUpdate();
-        AddSyncUpdateParameters(health, someString);
+        AddNetUpdateParameters(health, someString);
     }
 }

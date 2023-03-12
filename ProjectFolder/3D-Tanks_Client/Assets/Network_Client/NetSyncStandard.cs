@@ -4,14 +4,14 @@ using UnityEngine;
 
 public class NetSyncStandard : NetSync_Client
 {
-    protected override void ProcessInstantiationParameters(ref List<object> list)
+    protected override void NetAwake(ref List<object> list)
     {
-        base.ProcessInstantiationParameters(ref list);
+        base.NetAwake(ref list);
     }
 
-    protected override void ProcessNetUpdateParameters(ref List<object> list)
+    protected override void NetUpdate(ref List<object> list)
     {
-        base.ProcessNetUpdateParameters(ref list);
+        base.NetUpdate(ref list);
 
         TransformInfo transformInfo = new TransformInfo();
         Deque(ref transformInfo, list);
