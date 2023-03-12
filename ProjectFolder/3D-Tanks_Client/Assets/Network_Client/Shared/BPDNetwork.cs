@@ -153,7 +153,7 @@ public class BPDNetwork : MonoBehaviour
             //Possible performance drain here. Debugger suggests that RPCs with empty parameter bundles still cause looping to occur through entire transmission. 
             else if (character == 'A') //Characters 'A' designate the start of a bundled object array. 
             {
-                NetLogger.LogWarning($"CALLING DEF READER RECURSIVELY ON ARRAY DEFINITION AT INDEX {i}");
+                //NetLogger.LogWarning($"CALLING DEF READER RECURSIVELY ON ARRAY DEFINITION AT INDEX {i}");
 
                 //mark the current character so that recursion doesnt see it
                 parametersDefinition[i] = '_';
@@ -191,7 +191,7 @@ public class BPDNetwork : MonoBehaviour
         string parametersDefinition = ""; //This will become the string that RPCs use to define their contents. For example, IFV means it should contain an integer, float, and vector3, in that order
 
         WriteParameterDef(ref parametersDefinition, parameters);
-        Debug.LogWarning($"Parameter definition written as {parametersDefinition}");
+        //Debug.LogWarning($"Parameter definition written as {parametersDefinition}");
         message.Write(parametersDefinition);
 
         WriteParameterContents(ref message, parameters);
@@ -242,7 +242,7 @@ public class BPDNetwork : MonoBehaviour
                 parametersDefinition = parametersDefinition + $"A";
 
 
-                Debug.LogWarning($"CALLING DEF WRITER RECURSIVELY ON OBJECT ARRAY OF LENGTH {arrayLength}");
+                //Debug.LogWarning($"CALLING DEF WRITER RECURSIVELY ON OBJECT ARRAY OF LENGTH {arrayLength}");
                 WriteParameterDef(ref parametersDefinition, obj as object[]);
                 parametersDefinition = parametersDefinition + $"a";
             }
@@ -310,7 +310,7 @@ public class BPDNetwork : MonoBehaviour
             }
             else if (obj is object[])
             {
-                Debug.LogWarning("CALLING CONTENT WRITER RECURSIVELY ON OBJECT ARRAY");
+                //Debug.LogWarning("CALLING CONTENT WRITER RECURSIVELY ON OBJECT ARRAY");
                 WriteParameterContents(ref message, obj as object[]);
             }
             else

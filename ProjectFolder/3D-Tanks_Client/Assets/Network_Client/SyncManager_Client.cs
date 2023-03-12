@@ -19,13 +19,12 @@ public class SyncManager_Client : MonoBehaviour
     }
 
     //RPC for syncing up network objects
-    public void SyncUpdate(NetConnection server, int ID, TransformInfo transformInfo)
+    public void SyncUpdate(NetConnection server, int ID, params object[] parameters)
     {
         NetSync_Client netSyncToSync = GetNetSyncByID(ID);
         if (netSyncToSync != null)
         {
-            netSyncToSync.transform.position = transformInfo.position;
-            netSyncToSync.transform.rotation = transformInfo.rotation;
+            netSyncToSync.NetUpdate(parameters);
         }
         else
         {

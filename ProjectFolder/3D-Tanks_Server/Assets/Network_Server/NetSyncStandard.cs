@@ -2,20 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NetSync_prototype : NetSync_Server
+public class NetSyncStandard : NetSync_Server
 {
-    public float health = 10;
-    public string someString = "PROTOTYPELOLOLOL";
-
     protected override void NetAwake()
     {
         base.NetAwake();
-        AddInstantiationParameters(health, someString);
     }
-
     protected override void NetUpdate()
     {
         base.NetUpdate();
-        AddSyncUpdateParameters(health, someString);
+        AddSyncUpdateParameters(new TransformInfo(transform));
     }
 }

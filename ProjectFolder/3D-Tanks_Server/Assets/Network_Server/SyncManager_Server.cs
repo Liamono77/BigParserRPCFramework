@@ -28,9 +28,9 @@ public class SyncManager_Server : MonoBehaviour
 
     }
 
-    public void SendSyncUpdate(NetSync_Server netSync)
+    public void SendSyncUpdate(NetSync_Server netSync, params object[] parameters)
     {
-        BPDServer.instance.CallRPC("SyncUpdate", NetDeliveryMethod.Unreliable, netSync.ID, new TransformInfo(netSync.transform));
+        BPDServer.instance.CallRPC("SyncUpdate", NetDeliveryMethod.Unreliable, netSync.ID, parameters);
     }
 
     public void SendSyncUpdatePrototype(NetSync_Server netSync, params object[] parameters)

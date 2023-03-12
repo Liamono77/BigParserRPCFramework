@@ -11,28 +11,17 @@ public class NetSync_Server : MonoBehaviour
     private List<object> syncParameters = new List<object>();
     private List<object> syncUpdateParameters = new List<object>();
 
-    public bool usePrototype;
-
     // Start is called before the first frame update
     protected virtual void Awake()
     {
         syncManager = safeSyncManager();
-        PreAwake();
-
-        if (usePrototype == false)
-        {
-            syncManager.NetworkedStart(this, syncParameters.ToArray());
-
-        }
-        else
-        {
-            syncManager.NetworkedStartPrototype(this, syncParameters.ToArray());
-        }
+        NetAwake();
+        syncManager.NetworkedStart(this, syncParameters.ToArray());
 
     }
 
-    //scripts should override this when calling AddParameters to add whatever parameters will 
-    protected virtual void PreAwake()
+    //scripts should override this when calling AddParameters to add whatever parameters should be sent to clients upon instantiation
+    protected virtual void NetAwake()
     {
 
     }
@@ -47,8 +36,8 @@ public class NetSync_Server : MonoBehaviour
     }
 
 
-
-    protected virtual void PreSyncUpdate()
+    //scripts should override this with AddSyncUpdateParameters calls to add whatever parameters should be sent to clients during sync updates
+    protected virtual void NetUpdate()
     {
 
     }
@@ -107,16 +96,9 @@ public class NetSync_Server : MonoBehaviour
 
     protected virtual void RequestSyncUpdate()
     {
-        if (usePrototype == false)
-        {
-            syncManager.SendSyncUpdate(this);
+        NetUpdate();
+        syncManager.SendSyncUpdate(this, syncUpdateParameters.ToArray());
 
-        }
-        else
-        {
-            PreSyncUpdate();
-            syncManager.SendSyncUpdatePrototype(this, syncUpdateParameters.ToArray());
-        }
     }
 
     protected virtual void OnDestroy()
