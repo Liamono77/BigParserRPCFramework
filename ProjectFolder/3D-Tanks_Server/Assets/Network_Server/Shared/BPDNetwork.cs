@@ -32,10 +32,6 @@ public class BPDNetwork : MonoBehaviour
         int numberOfMessages = netPeer.ReadMessages(incomingMessages);
         foreach (NetIncomingMessage message in incomingMessages)
         {
-            if (message.SenderConnection == null)
-            {
-                NetLogger.LogError("LOL");
-            }
             long senderID = message.SenderConnection.RemoteUniqueIdentifier;
             NetLogger.Log($"Received message of type {message.MessageType.ToString()} from sender of id {senderID}");
             if (message.MessageType == NetIncomingMessageType.Data)
@@ -128,6 +124,21 @@ public class BPDNetwork : MonoBehaviour
                 TransformInfo newTransformInfo = new TransformInfo(pos, rot);
                 parameters.Add(newTransformInfo);
             }
+            else if (character == 'P') //player stat update
+            {
+                PlayerStatUpdate playerStatUpdate = new PlayerStatUpdate();
+                playerStatUpdate.playerID = message.ReadInt32();
+                playerStatUpdate.username = message.ReadString();
+                int statCount = message.ReadInt32();
+                for (int i = 0; i < statCount; i++)
+                {
+                    StatObject statObject = new StatObject(message.ReadString(), message.ReadInt32());
+                    playerStatUpdate.statObjects.Add(statObject);
+                }
+                //playerStatUpdate.statCount = statCount;
+
+                parameters.Add(playerStatUpdate);
+            }
             else
             {
                 NetLogger.LogError($"Unrecognized parameter of character definition {character}");
@@ -166,6 +177,10 @@ public class BPDNetwork : MonoBehaviour
             else if (obj is TransformInfo)
             {
                 parametersDefinition = parametersDefinition + "T";
+            }
+            else if (obj is PlayerStatUpdate)
+            {
+                parametersDefinition = parametersDefinition + "P";
             }
             else
             {
@@ -214,6 +229,18 @@ public class BPDNetwork : MonoBehaviour
                 message.Write(euler.y);
                 message.Write(euler.z);
 
+            }
+            else if (obj is PlayerStatUpdate)
+            {
+                PlayerStatUpdate theUpdate = (PlayerStatUpdate)obj;
+                message.Write(theUpdate.playerID);
+                message.Write(theUpdate.username);
+                message.Write(theUpdate.statObjects.Count);
+                foreach (StatObject statObject in theUpdate.statObjects)
+                {
+                    message.Write(statObject.name);
+                    message.Write(statObject.statValue);
+                }
             }
             else
             {
@@ -269,4 +296,29 @@ public class TransformInfo
     }
     public Vector3 position;
     public Quaternion rotation;
+}
+
+[System.Serializable]
+public class PlayerStatUpdate
+{
+    public int playerID;
+    public string username;
+    //public int statCount;
+    public List<StatObject> statObjects = new List<StatObject>();
+}
+
+[System.Serializable]
+public class StatObject
+{
+    public StatObject()
+    {
+
+    }
+    public StatObject(string sname, int value)
+    {
+        name = sname;
+        statValue = value;
+    }
+    public string name;
+    public int statValue;
 }

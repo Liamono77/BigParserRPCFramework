@@ -9,6 +9,8 @@ using Lidgren.Network;
 [System.Serializable]
 public class TankServerPlayerData
 {
+
+
     public TankServerUniversal tankServerRef;
 
     public PlayerConnection myConnection;
@@ -27,6 +29,27 @@ public class TankServerPlayerData
     public float deathDuration = 3f;
 
     public GameObject currentTank;
+
+    public PlayerStatUpdate playerStats = new PlayerStatUpdate();
+
+    //Initialize universal stat object data
+    public StatObject kills = new StatObject("kills", 0);
+    public StatObject deaths = new StatObject("deaths", 0);
+    public StatObject assists = new StatObject("assists", 0);
+    public StatObject objectives = new StatObject("objectives", 0);
+    public StatObject totalScore = new StatObject("totalScore", 0);
+    public TankServerPlayerData(int ID, string username)
+    {
+        playerStats.statObjects.Add(kills);
+        playerStats.statObjects.Add(deaths);
+        playerStats.statObjects.Add(assists);
+        playerStats.statObjects.Add(objectives);
+        playerStats.statObjects.Add(totalScore);
+        playerStats.username = username;
+        playerStats.playerID = ID;
+        //playerStats.statCount = playerStats.statObjects.Count;
+
+    }
 
     //public void SendPlayerStatusUpdate()
     //{
@@ -107,7 +130,7 @@ public class TankServerUniversal : MonoBehaviour
 
     public void OnPlayerConnection(PlayerConnection player)
     {
-        TankServerPlayerData playerData = new TankServerPlayerData();
+        TankServerPlayerData playerData = new TankServerPlayerData(player.playerID, player.userName);
         playerData.myConnection = player;
         playerData.tankServerRef = this;
         player.serverData = playerData;
@@ -152,6 +175,27 @@ public class TankServerUniversal : MonoBehaviour
         {
             NetLogger.LogWarning($"SPAWN: Failed to spawn a tank for player of ID {sender.RemoteUniqueIdentifier}");
         }
+    }
+
+    //This RPC represents a client request for the current player list
+    public void PlayerStatsRequest(NetConnection client)
+    {
+        PlayerConnection reqPlayer = ServerGameLogic.GetPlayer(client);
+        if (reqPlayer != null)
+        {
+            foreach (PlayerConnection player in ServerGameLogic.instance.currentConnections)
+            {
+                SendStatUpdate(player, reqPlayer);
+            }
+        }
+
+    }
+
+
+    public void SendStatUpdate(PlayerConnection player, PlayerConnection reciever)
+    {
+        TankServerPlayerData tankData = (player.serverData as TankServerPlayerData);
+        BPDServer.instance.CallRPC("PlayerStatUpdate", reciever.connection, NetDeliveryMethod.Unreliable, tankData.playerStats);
     }
 
     //This RPC represents a request from a client to change one thing about current tank loadout. Be sure to verify this request using BigParser data!

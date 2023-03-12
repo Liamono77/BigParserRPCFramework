@@ -6,12 +6,12 @@ using UnityEngine.UI;
 //public class UINode 
 
 
-public class UIScreen : MonoBehaviour
+public class UIScreen : UIBase
 {
-    public virtual void ManagedStart()
-    {
+    //public virtual void ManagedStart()
+    //{
 
-    }
+    //}
     //put this on UI buttons tabs
     public void SwitchToMe()
     {

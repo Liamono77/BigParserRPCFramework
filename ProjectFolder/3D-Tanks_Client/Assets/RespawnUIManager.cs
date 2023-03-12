@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class RespawnUIManager : MonoBehaviour
+public class RespawnUIManager : UIBase
 {
     public static RespawnUIManager instance;
 
@@ -13,14 +13,14 @@ public class RespawnUIManager : MonoBehaviour
     }
 
     public List<UIScreen> myScreens;
-    // Start is called before the first frame update
-    void Start()
-    {
-        foreach (UIScreen screen in myScreens)
-        {
-            screen.ManagedStart();
-        }
-    }
+    //// Start is called before the first frame update
+    //void Start()
+    //{
+    //    foreach (UIScreen screen in myScreens)
+    //    {
+    //        screen.ManagedStart();
+    //    }
+    //}
 
     // Update is called once per frame
     void Update()

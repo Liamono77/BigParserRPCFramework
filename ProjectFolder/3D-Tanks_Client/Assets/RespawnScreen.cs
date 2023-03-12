@@ -2,9 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//Respawn-checking logic can go here if necessary, otherwise this may not need to do anything
+//screw it, this script is getting promoted to general playmode menu logic
 public class RespawnScreen : UIScreen
 {
+    public GameObject waitingForPlayersScreen;
+
+    //public GameObject killCamUI;
+    //public GameObject 
     // Start is called before the first frame update
     void Start()
     {
@@ -14,6 +18,6 @@ public class RespawnScreen : UIScreen
     // Update is called once per frame
     void Update()
     {
-        
+        waitingForPlayersScreen.SetActive(TankClientUniversal.instance.serverState == TankClientUniversal.ServerState.waitingForPlayers);
     }
 }
