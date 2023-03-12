@@ -17,7 +17,7 @@ public class NetSync_Server : MonoBehaviour
         syncManager.NetworkedStart(this);
     }
 
-    SyncManager_Server safeSyncManager()
+    protected SyncManager_Server safeSyncManager()
     {
         if (syncManager != null)
         {
@@ -32,6 +32,16 @@ public class NetSync_Server : MonoBehaviour
             Debug.LogWarning("sync object has probably called Awake before the syncmanager's Awake. Running GameObject.Find()...");
             return (FindObjectOfType<SyncManager_Server>());
         }
+    }
+
+    //Override this with specialized logic. Try to minimize the data 
+    protected virtual void SendSyncUpdate()
+    {
+
+    }
+    protected virtual void SendNetInstantiation()
+    {
+
     }
 
     protected virtual void Start()

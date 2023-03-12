@@ -152,6 +152,116 @@ public class BPDNetwork : MonoBehaviour
     {
         string parametersDefinition = ""; //This will become the string that RPCs use to define their contents. For example, IFV means it should contain an integer, float, and vector3, in that order
 
+        //foreach (object obj in parameters) //Another foreach loop, this time to convert parameters into a string that the read function will use to determine the RPC contents
+        //{
+        //    if (obj is int)
+        //    {
+        //        parametersDefinition = parametersDefinition + "I";
+        //    }
+        //    else if (obj is float)
+        //    {
+        //        parametersDefinition = parametersDefinition + "F";
+        //    }
+        //    else if (obj is string)
+        //    {
+        //        parametersDefinition = parametersDefinition + "S";
+        //    }
+        //    else if (obj is bool)
+        //    {
+        //        parametersDefinition = parametersDefinition + "B";
+        //    }
+        //    else if (obj is Vector3)
+        //    {
+        //        parametersDefinition = parametersDefinition + "V";
+        //    }
+        //    else if (obj is TransformInfo)
+        //    {
+        //        parametersDefinition = parametersDefinition + "T";
+        //    }
+        //    else if (obj is PlayerStatUpdate)
+        //    {
+        //        parametersDefinition = parametersDefinition + "P";
+        //    }
+        //    else if (obj is object[])
+        //    {
+        //        foreach (object ob in obj as object[])
+        //        {
+        //            Debug.LogWarning($"PROTOTYPE: WOULD ATTEMPT TO WRITE RPC DEF FOR OBJECT {ob}");
+
+        //        }
+        //    }
+        //    else
+        //    {
+        //        NetLogger.LogError($"Failed to write an RPC definition for object {obj}");
+        //    }
+        //}
+        WriteParameterDef(ref parametersDefinition, parameters);
+        Debug.LogWarning($"Parameter definition written as {parametersDefinition}");
+        message.Write(parametersDefinition);
+
+        //foreach (object obj in parameters) //This next foreach loop may look similar to the previous, but must be separate to ensure the definition section of the RPC is completely separate from the contents
+        //{
+        //    if (obj is int)
+        //    {
+        //        int anInteger = (int)obj;
+        //        message.Write(anInteger);
+        //    }
+        //    else if (obj is float)
+        //    {
+        //        float aFloat = (float)obj;
+        //        message.Write(aFloat);
+        //    }
+        //    else if (obj is string)
+        //    {
+        //        string aString = (string)obj;
+        //        message.Write(aString);
+        //    }
+        //    else if (obj is bool)
+        //    {
+        //        bool aBool = (bool)obj;
+        //        message.Write(aBool);
+        //    }
+        //    else if (obj is Vector3)
+        //    {
+        //        Vector3 aVector = (Vector3)obj;
+        //        message.Write(aVector.x);
+        //        message.Write(aVector.y);
+        //        message.Write(aVector.z);
+        //    }
+        //    else if (obj is TransformInfo)
+        //    {
+        //        TransformInfo theInfo = (TransformInfo)obj;
+        //        message.Write(theInfo.position.x);
+        //        message.Write(theInfo.position.y);
+        //        message.Write(theInfo.position.z);
+        //        Vector3 euler = theInfo.rotation.eulerAngles;
+        //        message.Write(euler.x);
+        //        message.Write(euler.y);
+        //        message.Write(euler.z);
+
+        //    }
+        //    else if (obj is PlayerStatUpdate)
+        //    {
+        //        PlayerStatUpdate theUpdate = (PlayerStatUpdate)obj;
+        //        message.Write(theUpdate.playerID);
+        //        message.Write(theUpdate.username);
+        //        message.Write(theUpdate.statObjects.Count);
+        //        foreach (StatObject statObject in theUpdate.statObjects)
+        //        {
+        //            message.Write(statObject.name);
+        //            message.Write(statObject.statValue);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        NetLogger.LogError($"Failed to write RPC contents for object {obj}");
+        //    }
+        //}
+        WriteParameterContents(ref message, parameters);
+    }
+
+    void WriteParameterDef(ref string parametersDefinition, params object[] parameters)
+    {
         foreach (object obj in parameters) //Another foreach loop, this time to convert parameters into a string that the read function will use to determine the RPC contents
         {
             if (obj is int)
@@ -182,13 +292,20 @@ public class BPDNetwork : MonoBehaviour
             {
                 parametersDefinition = parametersDefinition + "P";
             }
+            else if (obj is object[])
+            {
+                Debug.LogWarning("CALLING DEF WRITER RECURSIVELY ON OBJECT ARRAY");
+                WriteParameterDef(ref parametersDefinition, obj as object[]);
+            }
             else
             {
                 NetLogger.LogError($"Failed to write an RPC definition for object {obj}");
             }
         }
-        message.Write(parametersDefinition);
+    }
 
+    void WriteParameterContents(ref NetOutgoingMessage message, params object[] parameters)
+    {
         foreach (object obj in parameters) //This next foreach loop may look similar to the previous, but must be separate to ensure the definition section of the RPC is completely separate from the contents
         {
             if (obj is int)
@@ -241,6 +358,11 @@ public class BPDNetwork : MonoBehaviour
                     message.Write(statObject.name);
                     message.Write(statObject.statValue);
                 }
+            }
+            else if (obj is object[])
+            {
+                Debug.LogWarning("CALLING CONTENT WRITER RECURSIVELY ON OBJECT ARRAY");
+                WriteParameterContents(ref message, obj as object[]);
             }
             else
             {

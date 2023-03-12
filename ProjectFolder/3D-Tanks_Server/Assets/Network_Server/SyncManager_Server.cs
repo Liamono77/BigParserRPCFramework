@@ -51,6 +51,24 @@ public class SyncManager_Server : MonoBehaviour
         }
     }
 
+    public void NetworkedStartPrototype(NetSync_Server newNetSync, params object[] parameters)
+    {
+        if (!netSyncs.Contains(newNetSync))//make sure they're not already in the list
+        {
+            lastID++;
+            newNetSync.SetID(lastID);
+            netSyncs.Add(newNetSync);
+            if (BPDServer.hasInitialized) //If the BPDServer hasn't initialized itself yet, then don't bother with the netinstantiation RPC because no clients will be connected.
+            {
+                CallNetInstantiationPrototype(newNetSync, parameters);
+            }
+        }
+        else
+        {
+            NetLogger.LogError("attempted to add a NetSync that already exists");
+        }
+    }
+
     //keep these two overloads close to each other for ease of comparison. They're supposed to call the same RPC, except one should be for a specific client. My setup doens't seem to permit proper inheritance syntax. 
     void CallNetInstantiation(NetSync_Server newNetSync)
     {
@@ -59,6 +77,12 @@ public class SyncManager_Server : MonoBehaviour
     void CallNetInstantiation(NetSync_Server newNetSync, NetConnection sender)
     {
         BPDServer.instance.CallRPC("NetInstantiation", sender, newNetSync.prefabName, newNetSync.ID, new TransformInfo(newNetSync.transform));
+    }
+
+    void CallNetInstantiationPrototype(NetSync_Server newNetSync, params object[] parameters)
+    {
+        BPDServer.instance.CallRPC("NetInstantiation", newNetSync.prefabName, newNetSync.ID, new TransformInfo(newNetSync.transform), parameters);
+
     }
 
     public void NetworkedDestroy(NetSync_Server netSync)
