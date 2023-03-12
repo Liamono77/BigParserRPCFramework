@@ -39,9 +39,8 @@ public class TankClientUniversal : MonoBehaviour
     }
 
     public List<PlayerConnectionInfo> connectedPlayers = new List<PlayerConnectionInfo>();
-    //public List<>
 
-    //public PlayerState 
+    public NetSync_Client myNetSync;
 
     private void Awake()
     {
@@ -68,12 +67,33 @@ public class TankClientUniversal : MonoBehaviour
     {
 
 
-        SyncWithServerState(serverState);
-        BPDClient.instance.CallRPC("PlayerStatsRequest");
+        //ParseServerState(serverState);
+        ServerStateUpdate(server, serverState);
+        RefreshPlayerStats();
         serverJoinCallback(serverName, gameMode, description, serverState);
     }
 
-    void SyncWithServerState(string serverStateString)
+    //RPC from the server to synchronize server state
+    public void ServerStateUpdate(NetConnection server, string serverStateString)
+    {
+        ParseServerState(serverStateString);
+    }
+
+    void ParsePlayerState(string playerStateString)
+    {
+        if (PlayerState.TryParse(playerStateString, out playerState))
+        {
+            NetLogger.Log($"CLIENT HAS SUCCESSFULLY PARSED PLAYER STATE {playerState}");
+
+        }
+        else
+        {
+            NetLogger.LogError($"CLIENT HAS FAILED TO PARSE PLAYER STATE {playerStateString}");
+
+        }
+    }
+
+    void ParseServerState(string serverStateString)
     {
        
         if (ServerState.TryParse(serverStateString, out serverState))
@@ -82,13 +102,17 @@ public class TankClientUniversal : MonoBehaviour
         }
         else
         {
-            NetLogger.LogError($"CLIENT HAS FAILED TO PARSE SERVER STATE {serverState}");
+            NetLogger.LogError($"CLIENT HAS FAILED TO PARSE SERVER STATE {serverStateString}");
 
         }
     }
+    void RefreshPlayerStats()
+    {
+        connectedPlayers.Clear();
+        BPDClient.instance.CallRPC("PlayerStatsRequest");
+    }
 
-    //public delegate void UpdateConnectionsCallback();
-    //public UpdateConnectionsCallback updateConnectionsCallback;
+    //RPC from the server to update a player's stats
     public void PlayerStatUpdate(NetConnection server, PlayerStatUpdate statUpdate)
     {
         bool hasFound = false;
@@ -110,17 +134,34 @@ public class TankClientUniversal : MonoBehaviour
             playerConnectionInfo.username = statUpdate.username;
             connectedPlayers.Add(playerConnectionInfo);
         }
-
-
-
-        //for (int i = 0; i < connectedPlayers.Count; i++)
-        //{
-        //    if (connectedPlayers[i].ID == statUpdate.playerID)
-        //    {
-        //        connectedPlayers[i].currentStats = statUpdate;
-        //    }
-        //}
     }
+
+
+    public delegate void RespawnCallback();
+    public RespawnCallback respawnCallback;
+    public void ServerRespawnNotice(NetConnection server, int netSyncID)
+    {
+        playerState = PlayerState.Playing;
+
+        NetSync_Client theNetSync = SyncManager_Client.instance.GetNetSyncByID(netSyncID);
+        if (theNetSync != null)
+        {
+            myNetSync = theNetSync;
+        }
+        else
+        {
+            NetLogger.LogError("RESPAWN: failed to locate my net sync object");
+        }
+    }
+
+    public delegate void DeathCallback(float respawnTime, int killerSyncID, int killerPlayerID, string message);
+    public DeathCallback deathCallback;
+    public void ServerDeathNotice(NetConnection server, float respawnTime, int killerSyncID, int killerPlayerID, string message)
+    {
+        playerState = PlayerState.Spawning;
+        deathCallback(respawnTime, killerSyncID, killerPlayerID, message);
+    }
+
 
     public delegate void ServerChatCallback(string message);
     public ServerChatCallback serverChatCallback;

@@ -25,10 +25,10 @@ public class TankServerPlayerData
         //Dying, //Perform death-specific processes during this state
     }
 
-    public float deathTimer;
-    public float deathDuration = 3f;
+    public float nextSpawnTime;
+    public float spawnDelay = 3f;
 
-    public GameObject currentTank;
+    public NetSync_Server currentTank;
 
     public PlayerStatUpdate playerStats = new PlayerStatUpdate();
 
@@ -70,7 +70,7 @@ public class TankServerUniversal : MonoBehaviour
 
     public List<TankServerPlayerData> tankServerDatas = new List<TankServerPlayerData>();
 
-    public ServerState serverState = ServerState.waitingForPlayers;
+    public ServerState serverState = ServerState.waitingForPlayers; //Only modify this using SetServerState. i dont remember the proper technique for this lol
     public enum ServerState
     {
         waitingForPlayers, //in this mode, the server will wait until enough players have joined and voted to start the game. Some servers may return to this mode after every match, or never at all
@@ -79,8 +79,13 @@ public class TankServerUniversal : MonoBehaviour
         postGame, //This is the state that typically happens after a team or player has won a match. Often portrays a cinematic shot of the "top three" players of the session
         leaderboard, //This is the state in which players view the leaderboard for the game that has just ended. This is typically what players will look at until the next round begins. Players may usually disconnect at this point without penalties.
     }
+    public void SetServerState(ServerState state)
+    {
+        serverState = state;
+        BPDServer.instance.CallRPC("ServerStateUpdate", serverState.ToString());
+    }
 
-    public int minVotesToStart = 1;
+    public int minPlayersToStart = 1;
 
     public GameObject tankPrefab;
 
@@ -100,20 +105,16 @@ public class TankServerUniversal : MonoBehaviour
         {
             Update_WaitingForPlayers();
         }
+        if (serverState == ServerState.playing || serverState == ServerState.preGame)
+        {
+            MonitorPlayerTankStatus();
+        }
     }
 
     //Monitor the number of players voting to start a game.
     void Update_WaitingForPlayers()
     {
-        int numberOfVotes = 0;
-        foreach (PlayerConnection player in ServerGameLogic.instance.currentConnections)
-        {
-            if ((player.serverData as TankServerPlayerData).isReady)
-            {
-                numberOfVotes++;
-            }
-        }
-        if (numberOfVotes >= minVotesToStart)
+        if (ServerGameLogic.instance.currentConnections.Count >= minPlayersToStart)
         {
             NetLogger.Log("START VOTE HAS PASSED");
             SwitchToPreGame();
@@ -121,10 +122,31 @@ public class TankServerUniversal : MonoBehaviour
 
     }
 
+    //A temporary observer to test respawn mechanics with before implementing GameObject-specific techniques
+    void MonitorPlayerTankStatus()
+    {
+        foreach (PlayerConnection player in ServerGameLogic.instance.currentConnections)
+        {
+            TankServerPlayerData serverData = player.serverData as TankServerPlayerData;
+            if (serverData.currentTank == null)
+            {
+                if (serverData.playerState == TankServerPlayerData.PlayerState.Playing)
+                {
+                    //serverData.nextSpawnTime = Time.time + serverData.spawnDelay;
+                    //serverData.playerState = TankServerPlayerData.PlayerState.Spawning;
+                    //BPDServer.instance.CallRPC("ServerDeathNotice", player.connection, serverData.spawnDelay, -1, -1, "You have been killed! (kill trace unimplemented)");
+                    PlayerDeath(serverData);
+                }
+            }
+        }
+    }
+
+
+
     void SwitchToPreGame()
     {
-        serverState = ServerState.preGame;
-        BPDServer.instance.CallRPC("SwitchToPreGame");
+        SetServerState(ServerState.preGame);
+        //BPDServer.instance.CallRPC("ServerStateUpdate", ServerState.to);
     }
 
 
@@ -135,6 +157,7 @@ public class TankServerUniversal : MonoBehaviour
         playerData.tankServerRef = this;
         player.serverData = playerData;
         tankServerDatas.Add(playerData);
+        SendStatUpdate(player);
         SendServerInfo(player);
     }
 
@@ -150,11 +173,12 @@ public class TankServerUniversal : MonoBehaviour
         BPDServer.instance.CallRPC("ServerJoinResponse", player.connection, serverName, gameModeType, serverDescription, serverState.ToString());
     }
 
-    public void SpawnTank(PlayerConnection player)
+    public void PlayerDeath(TankServerPlayerData playerTankData)
     {
-        (player.serverData as TankServerPlayerData).currentTank = GameObject.Instantiate(tankPrefab);
+        playerTankData.nextSpawnTime = Time.time + playerTankData.spawnDelay;
+        playerTankData.playerState = TankServerPlayerData.PlayerState.Spawning;
+        BPDServer.instance.CallRPC("ServerDeathNotice", playerTankData.myConnection.connection, playerTankData.spawnDelay, -1, -1, "You have been killed! (kill trace unimplemented)");
     }
-
 
     //CLIENT RPCs BEYOND THIS POINT
 
@@ -164,12 +188,40 @@ public class TankServerUniversal : MonoBehaviour
     public void PlayerSpawnRequest(NetConnection sender)
     {
         PlayerConnection player = ServerGameLogic.GetPlayer(sender);
-
-        if (player != null)
+        TankServerPlayerData tankData = player.serverData as TankServerPlayerData;
+        if (player != null && tankData != null)
         {
-            NetLogger.Log($"SPAWN: Attempting to spawn a tank for player {player.userName}");
-            SpawnTank(player);
-            onPlayerSpawn(player);
+            if (Time.time > tankData.nextSpawnTime)
+            {
+                //tankData.nextSpawnTime = Time.time + tankData.spawnDelay;
+
+                if ((player.serverData as TankServerPlayerData).currentTank == null)
+                {
+                    NetLogger.Log($"SPAWN: Attempting to spawn a tank for player {player.userName}");
+
+                    //Instantiate a tank for them
+                    (player.serverData as TankServerPlayerData).currentTank = GameObject.Instantiate(tankPrefab).GetComponent<NetSync_Server>();
+
+                    //update their player state locally
+                    tankData.playerState = TankServerPlayerData.PlayerState.Playing;
+
+                    //let them know they have a tank
+                    BPDServer.instance.CallRPC("ServerRespawnNotice", sender, tankData.currentTank.ID);
+
+                    //run all OnSpawn callbacks
+                    onPlayerSpawn(player);
+                }
+                else
+                {
+                    NetLogger.LogWarning($"SPAWN: Blocked a spawn request for player of username {player.userName}. Already has tank!");
+                }
+            }
+            else
+            {
+                NetLogger.LogWarning($"SPAWN: Blocked a spawn request for player of username {player.userName}. Timer is not passed! ");
+            }
+
+
         }
         else
         {
@@ -191,11 +243,18 @@ public class TankServerUniversal : MonoBehaviour
 
     }
 
-
     public void SendStatUpdate(PlayerConnection player, PlayerConnection reciever)
     {
         TankServerPlayerData tankData = (player.serverData as TankServerPlayerData);
         BPDServer.instance.CallRPC("PlayerStatUpdate", reciever.connection, NetDeliveryMethod.Unreliable, tankData.playerStats);
+    }
+    //This overload sends the update to all connected players
+    public void SendStatUpdate(PlayerConnection player)
+    {
+        foreach (PlayerConnection playerToSendTo in ServerGameLogic.instance.currentConnections)
+        {
+            SendStatUpdate(player, playerToSendTo);
+        }
     }
 
     //This RPC represents a request from a client to change one thing about current tank loadout. Be sure to verify this request using BigParser data!

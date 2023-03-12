@@ -13,7 +13,7 @@ public class UIScreen : UIBase
 
     //}
     //put this on UI buttons tabs
-    public void SwitchToMe()
+    public virtual void SwitchToMe()
     {
         Debug.Log("SWITCHSCREEN");
         gameObject.SetActive(true);

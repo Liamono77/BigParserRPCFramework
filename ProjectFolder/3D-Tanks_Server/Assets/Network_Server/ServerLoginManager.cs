@@ -39,7 +39,7 @@ public class ServerLoginManager : MonoBehaviour
             {
                 //if passwords match, then approve the login request.
                 //More logic will go here to link up player data with the rest of the game systems
-                ServerGameLogic.AddPlayerConnection(sender, $"Login approved", -1, username);
+                ServerGameLogic.AddPlayerConnection(sender, $"Login approved", username);
                 ServerGameLogic.instance.theServer.CallRPC("LoginResponse", sender, true, "password is correct. This message should get ignored");
             }
             else

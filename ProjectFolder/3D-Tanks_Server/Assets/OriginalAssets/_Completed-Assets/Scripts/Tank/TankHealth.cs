@@ -86,6 +86,11 @@ namespace Complete
 
             // Turn the tank off.
             gameObject.SetActive (false);
+
+            //destroy this tonk
+            Destroy(gameObject);
+
+            Destroy(m_ExplosionAudio.gameObject, 1f);
         }
     }
 }

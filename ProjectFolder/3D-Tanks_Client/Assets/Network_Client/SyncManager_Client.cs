@@ -100,7 +100,7 @@ public class SyncManager_Client : MonoBehaviour
 
 
     //WARNING: this is a resource-intensive lookup that will happen every Sync Update. If profiler points to this script as a high consumer, then consider this a possible culprit
-    NetSync_Client GetNetSyncByID(int ID)
+    public NetSync_Client GetNetSyncByID(int ID)
     {
         foreach (NetSync_Client netSync in netSyncs)
         {

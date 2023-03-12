@@ -23,7 +23,7 @@ public class ServerGameLogic : MonoBehaviour
     public BPDServer theServer;
 
     public List<PlayerConnection> currentConnections = new List<PlayerConnection>();
-
+    public int lastID = 0;
 
 
     //public float connectionCheckFrequency
@@ -74,12 +74,16 @@ public class ServerGameLogic : MonoBehaviour
 
     public delegate void PlayerAdded(PlayerConnection player);
     public PlayerAdded playerAddedCallback; //use this callback in other scripts for functionality based upon new players joining
-    public static void AddPlayerConnection(NetConnection client, string reason, int ID, string username)
+    public static void AddPlayerConnection(NetConnection client, string reason, string username)
     {
         NetLogger.Log($"CONNECTION: JOIN: Player of username '{username}' (client ID: '{client.RemoteUniqueIdentifier}') has been approved for full player connection. Reason: {reason}");
         PlayerConnection newPlayer = new PlayerConnection();
         newPlayer.connection = client;
-        newPlayer.playerID = ID;
+
+        //give the player a unique ID for this server
+        newPlayer.playerID = instance.lastID;
+        instance.lastID++;
+
         newPlayer.userName = username;
         instance.currentConnections.Add(newPlayer);
         instance.playerAddedCallback(newPlayer);
