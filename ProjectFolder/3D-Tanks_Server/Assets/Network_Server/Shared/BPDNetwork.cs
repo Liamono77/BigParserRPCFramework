@@ -72,12 +72,28 @@ public class BPDNetwork : MonoBehaviour
             MethodInfo methodInfo = script.GetType().GetMethod(functionName);
             if (methodInfo != null)
             {
-                methodInfo.Invoke(script, ReadRPCParameters(message));
+                methodInfo.Invoke(script, ReadRPCParametersNew(message));
                 hasFoundScript = true;
             }
         }
 
         return hasFoundScript;
+    }
+
+    //This function will attempt to convert the RPC data of an RPC call into an array of objects that can be used as parameters for invocation
+    protected object[] ReadRPCParametersNew(NetIncomingMessage message)
+    {
+
+        //parameters.Add(message.SenderConnection); //The first parameter of every RPC call should be internally set to the sender connection. This will allow the server and clients to ignore RPC calls from unauthorized sources, as well as make it easy to ignore unauthorized or invalid RPC calls
+
+        string parametersDefinition = message.ReadString(); //The first string of every RPC will be a series of letters representing data types for parameters (eg IFB would mean the RPC contains an int, float, and a bool)
+        char[] parametersAsArray = parametersDefinition.ToCharArray();
+        //ReadParametersNew(ref parameters, ref message, ref parametersAsArray);
+        List<object> parameters = ReadParametersAsList(ref message, ref parametersAsArray);
+        parameters.Insert(0, message.SenderConnection);
+
+
+        return parameters.ToArray();
     }
 
     //This function will attempt to convert the RPC data of an RPC call into an array of objects that can be used as parameters for invocation
@@ -88,7 +104,14 @@ public class BPDNetwork : MonoBehaviour
         parameters.Add(message.SenderConnection); //The first parameter of every RPC call should be internally set to the sender connection. This will allow the server and clients to ignore RPC calls from unauthorized sources, as well as make it easy to ignore unauthorized or invalid RPC calls
 
         string parametersDefinition = message.ReadString(); //The first string of every RPC will be a series of letters representing data types for parameters (eg IFB would mean the RPC contains an int, float, and a bool)
+        char[] parametersAsArray = parametersDefinition.ToCharArray();
+        ReadParametersNew(ref parameters, ref message, ref parametersAsArray);
 
+        return parameters.ToArray();
+    }
+
+    void ReadParameters(ref List<object> parameters, ref NetIncomingMessage message, ref string parametersDefinition)
+    {
         //Parse out the RPC parameters in this loop. All possible data types and structures that need to be transmitted over the internet will have to exist in this else/if chain first.
         foreach (char character in parametersDefinition)
         {
@@ -139,12 +162,215 @@ public class BPDNetwork : MonoBehaviour
 
                 parameters.Add(playerStatUpdate);
             }
+            else if (character == 'A')
+            {
+                string shortenedParamsDef = "";
+                int indexToStartAt = parametersDefinition.IndexOf(character);
+                int indexToEndAt = 0;
+                for (int i = indexToStartAt; i < parametersDefinition.Length; i++)
+                {
+                    if (parametersDefinition[i] == 'a')
+                    {
+                        //indexToEndAt = i
+                    }
+                }
+            }
             else
             {
                 NetLogger.LogError($"Unrecognized parameter of character definition {character}");
             }
+
+            //int parameterIndex = parametersDefinition.IndexOf(character);
+            //Debug.LogWarning($"parameterIndex {parameterIndex}");
+            //parametersDefinition[parameterIndex] = '_';
         }
-        return parameters.ToArray();
+    }
+
+    void ReadParametersNew(ref List<object> parameters, ref NetIncomingMessage message, ref char[] parametersDefinition)
+    {
+        //Parse out the RPC parameters in this loop. All possible data types and structures that need to be transmitted over the internet will have to exist in this else/if chain first.
+        for (int i = 0; i < parametersDefinition.Length; i++)
+        {
+            //tempString
+            char character = parametersDefinition[i];
+
+            if (character == 'I') //Integer
+            {
+                var parameter = message.ReadInt32();
+                parameters.Add(parameter);
+            }
+            else if (character == 'F') //Float
+            {
+                var parameter = message.ReadFloat();
+                parameters.Add(parameter);
+            }
+            else if (character == 'S') //String
+            {
+                var parameter = message.ReadString();
+                parameters.Add(parameter);
+            }
+            else if (character == 'B') //Boolean
+            {
+                var parameter = message.ReadBoolean();
+                parameters.Add(parameter);
+            }
+            else if (character == 'V') //Vector3.  It is assumed that the data will be written as XYZ
+            {
+                var parameter = new Vector3(message.ReadFloat(), message.ReadFloat(), message.ReadFloat());
+                parameters.Add(parameter);
+            }
+            else if (character == 'T')
+            {
+                Vector3 pos = new Vector3(message.ReadFloat(), message.ReadFloat(), message.ReadFloat());
+                Quaternion rot = Quaternion.Euler(message.ReadFloat(), message.ReadFloat(), message.ReadFloat());
+                TransformInfo newTransformInfo = new TransformInfo(pos, rot);
+                parameters.Add(newTransformInfo);
+            }
+            else if (character == 'P') //player stat update
+            {
+                PlayerStatUpdate playerStatUpdate = new PlayerStatUpdate();
+                playerStatUpdate.playerID = message.ReadInt32();
+                playerStatUpdate.username = message.ReadString();
+                int statCount = message.ReadInt32();
+                for (int o = 0; o < statCount; o++)
+                {
+                    StatObject statObject = new StatObject(message.ReadString(), message.ReadInt32());
+                    playerStatUpdate.statObjects.Add(statObject);
+                }
+                //playerStatUpdate.statCount = statCount;
+
+                parameters.Add(playerStatUpdate);
+            }
+            else if (character == 'A')
+            {
+                string shortenedParamsDef = "";
+                int indexToStartAt = System.Array.IndexOf(parametersDefinition, character);
+                int indexToEndAt = 0;
+                for (int o = indexToStartAt; o < parametersDefinition.Length; o++)
+                {
+                    if (parametersDefinition[o] == 'a')
+                    {
+                        //indexToEndAt = i
+                    }
+                }
+            }
+            else if (character == '_')
+            {
+                NetLogger.LogWarning("skipped a param that has probably been read already");
+            }
+            else
+            {
+                NetLogger.LogError($"Unrecognized parameter of character definition {character}");
+            }
+
+            //int parameterIndex = parametersDefinition.IndexOf(character);
+            //Debug.LogWarning($"parameterIndex {parameterIndex}");
+            //char s = 'l';
+            parametersDefinition[i] = '_';
+        }
+    }
+
+
+
+    List<object> ReadParametersAsList(ref NetIncomingMessage message, ref char[] parametersDefinition)
+    {
+        List<object> parameters = new List<object>();
+        //Parse out the RPC parameters in this loop. All possible data types and structures that need to be transmitted over the internet will have to exist in this else/if chain first.
+        for (int i = 0; i < parametersDefinition.Length; i++)
+        {
+            //tempString
+            char character = parametersDefinition[i];
+
+            if (character == 'I') //Integer
+            {
+                var parameter = message.ReadInt32();
+                parameters.Add(parameter);
+            }
+            else if (character == 'F') //Float
+            {
+                var parameter = message.ReadFloat();
+                parameters.Add(parameter);
+            }
+            else if (character == 'S') //String
+            {
+                var parameter = message.ReadString();
+                parameters.Add(parameter);
+            }
+            else if (character == 'B') //Boolean
+            {
+                var parameter = message.ReadBoolean();
+                parameters.Add(parameter);
+            }
+            else if (character == 'V') //Vector3.  It is assumed that the data will be written as XYZ
+            {
+                var parameter = new Vector3(message.ReadFloat(), message.ReadFloat(), message.ReadFloat());
+                parameters.Add(parameter);
+            }
+            else if (character == 'T')
+            {
+                Vector3 pos = new Vector3(message.ReadFloat(), message.ReadFloat(), message.ReadFloat());
+                Quaternion rot = Quaternion.Euler(message.ReadFloat(), message.ReadFloat(), message.ReadFloat());
+                TransformInfo newTransformInfo = new TransformInfo(pos, rot);
+                parameters.Add(newTransformInfo);
+            }
+            else if (character == 'P') //player stat update
+            {
+                PlayerStatUpdate playerStatUpdate = new PlayerStatUpdate();
+                playerStatUpdate.playerID = message.ReadInt32();
+                playerStatUpdate.username = message.ReadString();
+                int statCount = message.ReadInt32();
+                for (int o = 0; o < statCount; o++)
+                {
+                    StatObject statObject = new StatObject(message.ReadString(), message.ReadInt32());
+                    playerStatUpdate.statObjects.Add(statObject);
+                }
+                //playerStatUpdate.statCount = statCount;
+
+                parameters.Add(playerStatUpdate);
+            }
+            else if (character == 'A')
+            {
+                //string shortenedParamsDef = "";
+                //int indexToStartAt = System.Array.IndexOf(parametersDefinition, character);
+                //int indexToEndAt = 0;
+                //for (int o = indexToStartAt; o < parametersDefinition.Length; o++)
+                //{
+                //    if (parametersDefinition[o] == 'a')
+                //    {
+                //        //indexToEndAt = i
+                //    }
+                //}
+
+                //mark the current character so that recursion doesnt see it
+                Debug.LogWarning($"CALLING DEF READER RECURSIVELY ON ARRAY DEFINITION AT INDEX {i}");
+                parametersDefinition[i] = '_';
+                List<object> internalList = ReadParametersAsList(ref message, ref parametersDefinition);
+                parameters.Add(internalList.ToArray());
+
+                
+            }
+            else if (character == 'a')
+            {
+                //stop the loop here!
+                parametersDefinition[i] = '_';
+                return parameters;
+            }
+            else if (character == '_')
+            {
+                NetLogger.LogWarning("skipped a param that has probably been read already");
+            }
+            else
+            {
+                NetLogger.LogError($"Unrecognized parameter of character definition {character}");
+            }
+
+            //int parameterIndex = parametersDefinition.IndexOf(character);
+            //Debug.LogWarning($"parameterIndex {parameterIndex}");
+            //char s = 'l';
+            parametersDefinition[i] = '_';
+        }
+
+        return parameters;
     }
 
     //When called from an inheriting script, this function can be used to write a set of parameter objects into a NetOutgoingMessage which Lidgren can trasmit as a UDP datagram
@@ -152,113 +378,14 @@ public class BPDNetwork : MonoBehaviour
     {
         string parametersDefinition = ""; //This will become the string that RPCs use to define their contents. For example, IFV means it should contain an integer, float, and vector3, in that order
 
-        //foreach (object obj in parameters) //Another foreach loop, this time to convert parameters into a string that the read function will use to determine the RPC contents
-        //{
-        //    if (obj is int)
-        //    {
-        //        parametersDefinition = parametersDefinition + "I";
-        //    }
-        //    else if (obj is float)
-        //    {
-        //        parametersDefinition = parametersDefinition + "F";
-        //    }
-        //    else if (obj is string)
-        //    {
-        //        parametersDefinition = parametersDefinition + "S";
-        //    }
-        //    else if (obj is bool)
-        //    {
-        //        parametersDefinition = parametersDefinition + "B";
-        //    }
-        //    else if (obj is Vector3)
-        //    {
-        //        parametersDefinition = parametersDefinition + "V";
-        //    }
-        //    else if (obj is TransformInfo)
-        //    {
-        //        parametersDefinition = parametersDefinition + "T";
-        //    }
-        //    else if (obj is PlayerStatUpdate)
-        //    {
-        //        parametersDefinition = parametersDefinition + "P";
-        //    }
-        //    else if (obj is object[])
-        //    {
-        //        foreach (object ob in obj as object[])
-        //        {
-        //            Debug.LogWarning($"PROTOTYPE: WOULD ATTEMPT TO WRITE RPC DEF FOR OBJECT {ob}");
-
-        //        }
-        //    }
-        //    else
-        //    {
-        //        NetLogger.LogError($"Failed to write an RPC definition for object {obj}");
-        //    }
-        //}
         WriteParameterDef(ref parametersDefinition, parameters);
         Debug.LogWarning($"Parameter definition written as {parametersDefinition}");
         message.Write(parametersDefinition);
 
-        //foreach (object obj in parameters) //This next foreach loop may look similar to the previous, but must be separate to ensure the definition section of the RPC is completely separate from the contents
-        //{
-        //    if (obj is int)
-        //    {
-        //        int anInteger = (int)obj;
-        //        message.Write(anInteger);
-        //    }
-        //    else if (obj is float)
-        //    {
-        //        float aFloat = (float)obj;
-        //        message.Write(aFloat);
-        //    }
-        //    else if (obj is string)
-        //    {
-        //        string aString = (string)obj;
-        //        message.Write(aString);
-        //    }
-        //    else if (obj is bool)
-        //    {
-        //        bool aBool = (bool)obj;
-        //        message.Write(aBool);
-        //    }
-        //    else if (obj is Vector3)
-        //    {
-        //        Vector3 aVector = (Vector3)obj;
-        //        message.Write(aVector.x);
-        //        message.Write(aVector.y);
-        //        message.Write(aVector.z);
-        //    }
-        //    else if (obj is TransformInfo)
-        //    {
-        //        TransformInfo theInfo = (TransformInfo)obj;
-        //        message.Write(theInfo.position.x);
-        //        message.Write(theInfo.position.y);
-        //        message.Write(theInfo.position.z);
-        //        Vector3 euler = theInfo.rotation.eulerAngles;
-        //        message.Write(euler.x);
-        //        message.Write(euler.y);
-        //        message.Write(euler.z);
-
-        //    }
-        //    else if (obj is PlayerStatUpdate)
-        //    {
-        //        PlayerStatUpdate theUpdate = (PlayerStatUpdate)obj;
-        //        message.Write(theUpdate.playerID);
-        //        message.Write(theUpdate.username);
-        //        message.Write(theUpdate.statObjects.Count);
-        //        foreach (StatObject statObject in theUpdate.statObjects)
-        //        {
-        //            message.Write(statObject.name);
-        //            message.Write(statObject.statValue);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        NetLogger.LogError($"Failed to write RPC contents for object {obj}");
-        //    }
-        //}
         WriteParameterContents(ref message, parameters);
+        //Debug.Log$("{}")
     }
+
 
     void WriteParameterDef(ref string parametersDefinition, params object[] parameters)
     {
@@ -294,8 +421,19 @@ public class BPDNetwork : MonoBehaviour
             }
             else if (obj is object[])
             {
-                Debug.LogWarning("CALLING DEF WRITER RECURSIVELY ON OBJECT ARRAY");
+                //PREVIOUS
+                //Debug.LogWarning("CALLING DEF WRITER RECURSIVELY ON OBJECT ARRAY");
+                //WriteParameterDef(ref parametersDefinition, obj as object[]);
+
+                //NEW
+                object[] objectArray = obj as object[];
+                int arrayLength = objectArray.Length;
+                parametersDefinition = parametersDefinition + $"A";
+
+
+                Debug.LogWarning($"CALLING DEF WRITER RECURSIVELY ON OBJECT ARRAY OF LENGTH {arrayLength}");
                 WriteParameterDef(ref parametersDefinition, obj as object[]);
+                parametersDefinition = parametersDefinition + $"a";
             }
             else
             {
@@ -361,6 +499,12 @@ public class BPDNetwork : MonoBehaviour
             }
             else if (obj is object[])
             {
+                //PREVIOUS
+                //Debug.LogWarning("CALLING CONTENT WRITER RECURSIVELY ON OBJECT ARRAY");
+                //WriteParameterContents(ref message, obj as object[]);
+
+
+                //NEW
                 Debug.LogWarning("CALLING CONTENT WRITER RECURSIVELY ON OBJECT ARRAY");
                 WriteParameterContents(ref message, obj as object[]);
             }

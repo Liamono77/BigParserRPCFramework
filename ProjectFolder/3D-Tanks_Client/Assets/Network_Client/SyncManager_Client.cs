@@ -59,6 +59,7 @@ public class SyncManager_Client : MonoBehaviour
 
     public void NetInstantiationPrototype(NetConnection server, string prefabName, int ID, TransformInfo transformInfo, params object[] parameters)
     {
+        Debug.LogWarning("instantiation overload 1");
         GameObject newObject = GameObject.Instantiate(Resources.Load<GameObject>(prefabName), transformInfo.position, transformInfo.rotation);
         NetSync_Client newNetSync = newObject.GetComponent<NetSync_Client>();
         newNetSync.ID = ID;
@@ -71,29 +72,30 @@ public class SyncManager_Client : MonoBehaviour
             missingSyncIDs.Remove(ID);
         }
     }
-    public void NetInstantiationPrototype(params object[] parameters)
-    {
-        NetConnection server = (NetConnection)parameters[0];
-        string prefabName = (string)parameters[1];
-        int ID = (int)parameters[2];
-        TransformInfo transformInfo = (TransformInfo)parameters[3];
+    //public void NetInstantiationPrototype(params object[] parameters)
+    //{
+    //    Debug.LogWarning("instantiation overload 2");
+    //    NetConnection server = (NetConnection)parameters[0];
+    //    string prefabName = (string)parameters[1];
+    //    int ID = (int)parameters[2];
+    //    TransformInfo transformInfo = (TransformInfo)parameters[3];
 
 
 
 
 
-        GameObject newObject = GameObject.Instantiate(Resources.Load<GameObject>(prefabName), transformInfo.position, transformInfo.rotation);
-        NetSync_Client newNetSync = newObject.GetComponent<NetSync_Client>();
-        newNetSync.ID = ID;
-        netSyncs.Add(newNetSync);
-        newNetSync.InstantiationFunctionPrototype(parameters);
+    //    GameObject newObject = GameObject.Instantiate(Resources.Load<GameObject>(prefabName), transformInfo.position, transformInfo.rotation);
+    //    NetSync_Client newNetSync = newObject.GetComponent<NetSync_Client>();
+    //    newNetSync.ID = ID;
+    //    netSyncs.Add(newNetSync);
+    //    newNetSync.InstantiationFunctionPrototype(parameters);
 
-        if (missingSyncIDs.Contains(ID))
-        {
-            NetLogger.LogWarning($"Missing ID {ID} has been recieved from server.");
-            missingSyncIDs.Remove(ID);
-        }
-    }
+    //    if (missingSyncIDs.Contains(ID))
+    //    {
+    //        NetLogger.LogWarning($"Missing ID {ID} has been recieved from server.");
+    //        missingSyncIDs.Remove(ID);
+    //    }
+    //}
 
     public void FixMissingNetID(NetConnection server, int ID)
     {

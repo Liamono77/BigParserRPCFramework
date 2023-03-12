@@ -81,7 +81,7 @@ public class SyncManager_Server : MonoBehaviour
 
     void CallNetInstantiationPrototype(NetSync_Server newNetSync, params object[] parameters)
     {
-        BPDServer.instance.CallRPC("NetInstantiation", newNetSync.prefabName, newNetSync.ID, new TransformInfo(newNetSync.transform), parameters);
+        BPDServer.instance.CallRPC("NetInstantiationPrototype", newNetSync.prefabName, newNetSync.ID, new TransformInfo(newNetSync.transform), parameters);
 
     }
 
