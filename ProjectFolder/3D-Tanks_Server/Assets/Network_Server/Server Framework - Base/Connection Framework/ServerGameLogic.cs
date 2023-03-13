@@ -16,6 +16,11 @@ public class PlayerConnection
     public object specialData; //Use this for non-persistent gamemode-specific data structures (eg goomba stomps, owned AI-controlled units, remaining lives,  current powerups, scrap/gold/fuel,  etc.)
 }
 
+
+//SERVER GAME LOGIC
+//Game-independendent server management logic should go here
+//Functionality for connecting, monitoring, blocking, and auto-disconnecting players
+//This script contains callbacks that other scripts subscribe to for easy access to player joining and disconnecting.
 public class ServerGameLogic : MonoBehaviour
 {
     public static ServerGameLogic instance; //Singleton Reference
