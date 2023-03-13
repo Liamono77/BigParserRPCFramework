@@ -11,16 +11,28 @@ public class NetSync_Server : MonoBehaviour
     private List<object> syncParameters = new List<object>();
     private List<object> syncUpdateParameters = new List<object>();
 
+    public object[] getAwakeParameters()
+    {
+        SetParameters();
+        return syncParameters.ToArray();
+    }
 
     //scripts should override this when calling AddParameters to add whatever parameters should be sent to clients upon instantiation
-    protected virtual void NetAwake()
+    protected virtual void SetParameters()
     {
 
+    }
+
+    //scripts should override this like an extended awake 
+    protected virtual void NetAwake()
+    {
+    
     }
 
     //Inheriting scripts should call this to specify parameters that should be sent as part of a networked instantiation
     protected void AddNetAwakeParameters(params object[] parameters)
     {
+        syncParameters.Clear();
         foreach (object p in parameters)
         {
             syncParameters.Add(p);
@@ -54,6 +66,7 @@ public class NetSync_Server : MonoBehaviour
     {
         syncManager = safeSyncManager();
         NetAwake();
+        SetParameters();
         syncManager.NetworkedStart(this, syncParameters.ToArray());
 
     }

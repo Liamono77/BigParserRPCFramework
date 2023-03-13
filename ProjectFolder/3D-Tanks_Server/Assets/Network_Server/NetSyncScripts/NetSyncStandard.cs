@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class NetSyncStandard : NetSync_Server
 {
-    protected override void NetAwake()
+    protected override void SetParameters()
     {
-        base.NetAwake();
+        base.SetParameters();
     }
     protected override void NetUpdate()
     {

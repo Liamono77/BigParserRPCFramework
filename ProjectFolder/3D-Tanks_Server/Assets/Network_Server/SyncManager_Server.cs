@@ -114,7 +114,7 @@ public class SyncManager_Server : MonoBehaviour
         if (netSync != null)
         {
             NetLogger.LogWarning($"Player of ID {sender.RemoteUniqueIdentifier} has requested a networked object of ID {ID} (object name: {netSync.gameObject.name}). Sending information..");
-            CallNetInstantiation(netSync, sender);
+            CallNetInstantiation(netSync, sender, netSync.getAwakeParameters());
         }
         else
         {

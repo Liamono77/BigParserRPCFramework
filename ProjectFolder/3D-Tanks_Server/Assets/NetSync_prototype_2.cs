@@ -9,9 +9,9 @@ public class NetSync_prototype_2 : NetSync_prototype
     public string lol1 = "THE SECOND PROTOTYPE LOLOLOL";
     public string lol2 = "aiywbckaas";
 
-    protected override void NetAwake()
+    protected override void SetParameters()
     {
-        base.NetAwake();
+        base.SetParameters();
         AddNetAwakeParameters(lolBool, lolInt, lol1, lol2);
     }
 }

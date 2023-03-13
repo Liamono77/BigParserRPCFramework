@@ -7,9 +7,9 @@ public class NetSync_prototype : NetSync_Server
     public float health = 10;
     public string someString = "PROTOTYPELOLOLOL";
 
-    protected override void NetAwake()
+    protected override void SetParameters()
     {
-        base.NetAwake();
+        base.SetParameters();
         AddNetAwakeParameters(health, someString);
     }
 
