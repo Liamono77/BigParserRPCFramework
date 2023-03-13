@@ -4,6 +4,11 @@ using UnityEngine;
 using Lidgren.Network;
 using UnityEngine.UI;
 
+//CLIENT GAME LOGIC
+//This script is primarily intended for logic that handles client-server connection management.
+//Also responsible for disabling & enabling connection UI menus. 
+//Misnomer: this script isn't meant for game-specific logic. Will probably rename to "ClientConnectionLogic"
+//WRITTEN BY LIAM SHELTON
 public class ClientGameLogic : MonoBehaviour
 {
     public static ClientGameLogic instance; //Singleton reference

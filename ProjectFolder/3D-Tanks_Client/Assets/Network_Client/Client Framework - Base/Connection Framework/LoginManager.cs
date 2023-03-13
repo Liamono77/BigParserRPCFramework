@@ -4,8 +4,13 @@ using UnityEngine;
 using Lidgren.Network;
 using UnityEngine.UI;
 
+//LOGIN MANAGER
+//This script primarily controls login screen UI and login RPC calls. 
+//Bit of a programming fail on my part to try cramming all login-specific logic into this single script. Consider replacing with multiple scripts in the future.
+//WRITTEN BY LIAM SHELTON
 public class LoginManager : MonoBehaviour
 {
+    //This state machine enum defines the various states of signin. 
     public LogInState logInState = LogInState.usernameEntry;
     public enum LogInState
     {
@@ -13,21 +18,26 @@ public class LoginManager : MonoBehaviour
         passwordEntry,
         signup,
     }
-    public GameObject usernameScreen;
+
+    //This block contains references to username entry UI
+    public GameObject usernameScreen; //The GameObject containing username entry UI
     public InputField usernameText;
     public GameObject usernameFailMessage;
 
-    public GameObject passwordScreen;
+    //This block contains references to password entry UI
+    public GameObject passwordScreen; //The GameObject containing password entry UI
     public InputField passwordText;
     public GameObject passwordFailMessage;
     public Text logInAsUsernameMessage;
 
-    public GameObject signUpScreen;
+    //This block contains references to signup UI
+    public GameObject signUpScreen; //The GameObject containing signup UI
     public InputField newUsernameField;
     public InputField newPasswordField;
     public InputField secondPasswordField;
     public Text signupFailMessage;
 
+    //This block contains references to the UI indicator that informs clients if their login screen is waiting for a response from the server
     public GameObject waitingForResponseIndicator;
     public bool waitingForServerResponse;
 
@@ -48,6 +58,7 @@ public class LoginManager : MonoBehaviour
         logInAsUsernameMessage.text = $"attempting to log in as user {usernameText.text}";
     }
 
+    //RPC from server letting us know we've successfully logged in
     public void LoginResponse(NetConnection server, bool approved, string failMessage)
     {
         waitingForServerResponse = false;
@@ -63,6 +74,7 @@ public class LoginManager : MonoBehaviour
         }
     }
 
+    //RPC from server letting us know that our entered username exists in its records.
     public void UsernameResponse(NetConnection server, bool usernameExists, string failMessage)
     {
         waitingForServerResponse = false;
@@ -78,7 +90,7 @@ public class LoginManager : MonoBehaviour
         }
     }
 
-    //Call this through the continue button
+    //Call this through the continue button to send a username entry to the server.
     public void SendUsernameToServer()
     {
         waitingForServerResponse = true;
@@ -86,7 +98,7 @@ public class LoginManager : MonoBehaviour
         ClientGameLogic.instance.theClient.CallRPC("ClientSentUsername", usernameText.text);
     }
 
-    //Call this through the login button
+    //Call this through the login button to send a login request to the server (will send username and password together)
     public void SendLoginRequestToServer()
     {
         waitingForServerResponse = true;
@@ -95,7 +107,7 @@ public class LoginManager : MonoBehaviour
 
     }
 
-    //call this through the BACK ui button
+    //call this through the BACK ui button to go back to the username screen
     public void BackButton()
     {
         logInState = LogInState.usernameEntry;
@@ -104,7 +116,7 @@ public class LoginManager : MonoBehaviour
         waitingForServerResponse = false;
     }
 
-    //call this through the SignUp switch button
+    //call this through the SignUp switch button to bring up the signup menu
     public void SwitchToSignUpMode()
     {
         logInState = LogInState.signup;
@@ -113,7 +125,7 @@ public class LoginManager : MonoBehaviour
         waitingForServerResponse = false;
     }
 
-    //call this through a Register button of some sort
+    //call this through a Register button of some sort to send a signup request to the server (UNIMPLEMENTED ON SERVER--WAITING FOR BIGPARSER INTEGRATION)
     public void SendSignUpRequest()
     {
         if (newPasswordField.text == secondPasswordField.text)
@@ -131,6 +143,7 @@ public class LoginManager : MonoBehaviour
 
 
     }
+
     //RPC from server confirming or denying sign up request. TODO: set up local storage of username and password
     public void SignUpResponse(NetConnection server, bool approved, string failMessage)
     {
@@ -149,6 +162,7 @@ public class LoginManager : MonoBehaviour
         }
     }
 
+    //test rpc from when the RPC framework was new
     public void TestLoginRPC(NetConnection server)
     {
         Debug.Log("LOGINRPCCALLED");

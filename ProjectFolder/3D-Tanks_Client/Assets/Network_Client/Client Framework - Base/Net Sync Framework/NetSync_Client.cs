@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+//NET SYNC (client)
+//This is an abstract class to 
 public class NetSync_Client : MonoBehaviour
 {
     public int ID;
